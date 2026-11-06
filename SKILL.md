@@ -1,7 +1,7 @@
 ---
 name: shorts
 description: >
-allowed-toolsInteractive longform-to-shortform video creator. Extracts viral-ready short clips from long videos using Claude/Codex as the orchestrator. Transcribes with faster-whisper (GPU), Claude scores and presents candidate segments interactively, user picks and adjusts, Remotion renders premium animated captions (Bold/Bounce/Clean styles), FFmpeg exports platform-optimized files (YouTube Shorts, TikTok, Instagram Reels). Use when user says "shorts", "short clips", "shortform", "extract clips", "tiktok from video", "reels from video", "vertical clips", or "create shorts".
+  Interactive longform-to-shortform video creator. Extracts viral-ready short clips from long videos using Claude/Codex as the orchestrator. Transcribes with faster-whisper (GPU), Claude scores and presents candidate segments interactively, user picks and adjusts, Remotion renders premium animated captions (Bold/Bounce/Clean styles), FFmpeg exports platform-optimized files (YouTube Shorts, TikTok, Instagram Reels). Use when user says "shorts", "short clips", "shortform", "extract clips", "tiktok from video", "reels from video", "vertical clips", or "create shorts".
 allowed-tools:
   - Bash
   - Read
