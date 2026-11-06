@@ -37,8 +37,8 @@ Claude Code guides you through a 10-step interactive pipeline:
 - **FFmpeg** (system package)
 - **Python 3.10+**
 - **Node.js 18+**
-- **Claude Code** (CLI)
-- **NVIDIA GPU** recommended (for CUDA transcription + NVENC encoding)
+- **Claude Code** (CLI) / Codex
+- **NVIDIA GPU** recommended (for CUDA transcription + NVENC encoding)/ CPU fallback will take more time but possible
 
 ## Installation
 
@@ -157,7 +157,7 @@ claude-shorts/
 ## Caption Styles
 
 | Style | Font | Animation | Best For |
-|-------|------|-----------|----------|
+| ------- | ------ | ----------- | ---------- |
 | **Bold** | Montserrat Bold | Pop-in spring, yellow active word | Business, education |
 | **Bounce** | Bangers | Bouncy scale 70-120-100%, rotating colors | Entertainment, energy |
 | **Clean** | Inter Bold | Fade-in opacity, white + shadow | Professional, interviews |
@@ -165,7 +165,7 @@ claude-shorts/
 ## Platform Export Specs
 
 | Platform | Codec | Bitrate | Audio |
-|----------|-------|---------|-------|
+| ---------- | ------- | --------- | ------- |
 | **YouTube Shorts** | H.264 High 4.2 | 12 Mbps | AAC 192k |
 | **TikTok** | H.264 | CRF 18, -preset slow | AAC 128k |
 | **Instagram Reels** | H.264 High 4.2 | 4.5 Mbps (max 5000k) | AAC 128k |
@@ -173,7 +173,7 @@ claude-shorts/
 ## Content Type Strategies
 
 | Content Type | Reframe Strategy | Zoom |
-|--------------|-----------------|------|
+| -------------- | ----------------- | ------ |
 | **Talking-head** | Face-tracked center crop (MediaPipe) | 9:16 exact |
 | **Screen recording** | Cursor-tracked pan with moderate zoom | 55% of source width |
 | **Podcast** | Dominant speaker tracking | 9:16 exact |
@@ -181,12 +181,14 @@ claude-shorts/
 ## Dependencies
 
 ### Python (installed via `setup.sh`)
+
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper) - GPU-accelerated Whisper
 - [mediapipe](https://mediapipe.dev/) - Face detection for content classification + reframing
 - [numpy](https://numpy.org/) - Array operations for cursor tracking smoothing
 - [opencv-python](https://opencv.org/) - Frame differencing for cursor detection
 
 ### Node.js (installed via `setup.sh`)
+
 - [Remotion v4](https://remotion.dev/) - React-based video rendering
 - [@remotion/captions](https://remotion.dev/docs/captions) - TikTok-style word-level captions
 - [React 19](https://react.dev/) - Component framework
@@ -195,11 +197,13 @@ claude-shorts/
 ### Fonts
 
 Caption fonts are bundled from Google Fonts under the [SIL Open Font License](remotion/public/fonts/OFL.txt):
+
 - Montserrat Bold (Bold style)
 - Bangers Regular (Bounce style)
 - Inter Bold (Clean style)
 
 ### System
+
 - [FFmpeg](https://ffmpeg.org/) - Audio extraction, segment cutting, export encoding
 - [jq](https://jqlang.github.io/jq/) - JSON processing in shell scripts
 
@@ -208,7 +212,7 @@ Caption fonts are bundled from Google Fonts under the [SIL Open Font License](re
 Claude scores each candidate on 5 weighted dimensions:
 
 | Dimension | Weight | What Claude Looks For |
-|-----------|--------|----------------------|
+| ----------- | -------- | ---------------------- |
 | Hook Strength | 0.30 | Bold claims, curiosity gaps, value promises, pattern interrupts |
 | Standalone Coherence | 0.25 | Makes complete sense without any context from the rest of the video |
 | Emotional Intensity | 0.20 | Strong opinions, surprise reveals, humor, passion |
@@ -230,9 +234,5 @@ Final score = weighted sum, scale 0-100. Minimum threshold: 60.
 
 ## Author
 
-Built by [Agrici Daniel](https://agricidaniel.com/about) - AI Workflow Architect.
-
-- [Blog](https://agricidaniel.com/blog) - Deep dives on AI marketing automation
-- [AI Marketing Hub](https://www.skool.com/ai-marketing-hub) - Free community, 2,800+ members
-- [YouTube](https://www.youtube.com/@AgriciDaniel) - Tutorials and demos
-- [All open-source tools](https://github.com/AgriciDaniel)
+Built by Agrici Daniel - AI Workflow Architect.
+Improved by Praveen Pradhan - Software Engineer.
