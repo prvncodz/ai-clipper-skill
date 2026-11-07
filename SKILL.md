@@ -51,21 +51,9 @@ When the user invokes this skill with a video URL and asks to find clips (includ
 - Favor a bold claim, conflict, story with a payoff, or counterintuitive point. Reject moments that need prior context to make sense.
 - Shape each clip as three beats: Hook (first 0:00–0:03, drop into the climax of a thought; no greeting or throat-clearing), Tension (through roughly 0:35), and Payoff (final roughly 10 seconds). Identify trailing words to trim so the final line flows back into the hook for a replay loop.
 
-**For every selected clip, provide these editorial and publishing details alongside the pipeline’s existing candidate presentation and approval flow:**
+**State this global edit specification once after all clip recommendations, not once per clip:**
 
-1. Start and end timestamps and duration.
-2. Strongest hook line. If it is not the opener, identify the line to move to the front with its transcript timestamp. Add a 3–4 word on-screen hook overlay.
-3. One-sentence rationale and the biggest drop-off risk.
-4. Cuts: pauses, tangents, and filler to remove, with timestamps. List a pause only when the transcript timestamp gaps establish it; otherwise write “verify in timeline”. Never invent timestamps.
-5. Edit cues: for the hook, suggest a roughly 110% punch zoom or fast pan and a riser/whoosh under the first word. Suggest pattern interrupts roughly every 2.5–3.5 seconds (timestamp plus B-roll, 1.15× punch zoom, or flash/glitch on a key word), including at least three timestamped B-roll or SFX moments. Use transcript timestamps only; mark visual/audio timing that needs footage review as “verify in timeline”.
-6. Compliance check confirming whether the clip and its metadata meet every campaign input above.
-7. YouTube Shorts metadata: title under 70 characters and hook-first; 2–3 line description with the hook first, CTA, and required YouTube mentions verbatim; 8–12 tags, including campaign owner @markmanson.
-8. Instagram Reels caption: hook line, 1–2 context lines, CTA, 3–5 hashtags, and required Instagram mentions verbatim.
-9. Pinned comment text only if required; with the current default, state “None required”.
-10. Best upload time in IST for the US audience. Determine the current US daylight-saving offset for today’s date before converting; do not assume a fixed offset.
-
-State this global edit specification once after all clip recommendations, not once per clip:
-
+- Cuts: pauses, tangents, and filler to remove, with timestamps. List a pause only when the transcript timestamp gaps establish it; otherwise write “verify in timeline”. Never invent timestamps.
 - Safe zones for 1080×1920: top 15% and bottom 20% blocked; right 12% blocked by buttons. Center captions at 950–1150 px from the top. Place the speaker’s eyes near the 60% line and center B-roll.
 - Captions: 1–2 words per pop-up, never full sentences; Montserrat Black or Futura Bold; highlight key words in a contrasting color.
 - Audio chain: light noise reduction → compressor → EQ (cut below 80 Hz, slight boost around 5 kHz). Dialogue peaks: −3 to −1 dB; music: −18 to −22 dB; SFX: −8 to −12 dB.
