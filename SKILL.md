@@ -44,22 +44,14 @@ mkdir -p "$SHORTS_TMP/clips"
 
 When the user invokes this skill with a video URL and asks to find clips (including a short prompt such as “use this skill”), ask for the campaign info below. Do not ask the user to repeat these inputs. A URL is the only required per-video input. Continue through the existing 10-step pipeline; obtain the video and generate its transcript before selecting or timing clips. Ask only the pipeline’s existing questions and only when required to proceed.
 
-Campaign defaults (the user may override any of these):
-
-- Required Instagram mentions:none
-- Required YouTube mentions:none
-- Required pinned comment/link: none
-- Audio restrictions: none
-- Target audience: US
-
-Apply these selection rules during Step 4 and present the resulting recommendations in Step 5:
+**Apply these selection rules during Step 4 and present the resulting recommendations in Step 5:**
 
 - Select 3–8 best clips, ranked best to worst, with no numerical scores in the user-facing recommendations. Select fewer than 5 when fewer than 5 qualify; never pad the list.
 - Each clip must be 35–55 seconds, begin at the start of a sentence, end on a finished thought, and use only timestamps present in the generated transcript.
 - Favor a bold claim, conflict, story with a payoff, or counterintuitive point. Reject moments that need prior context to make sense.
 - Shape each clip as three beats: Hook (first 0:00–0:03, drop into the climax of a thought; no greeting or throat-clearing), Tension (through roughly 0:35), and Payoff (final roughly 10 seconds). Identify trailing words to trim so the final line flows back into the hook for a replay loop.
 
-For every selected clip, provide these editorial and publishing details alongside the pipeline’s existing candidate presentation and approval flow:
+**For every selected clip, provide these editorial and publishing details alongside the pipeline’s existing candidate presentation and approval flow:**
 
 1. Start and end timestamps and duration.
 2. Strongest hook line. If it is not the opener, identify the line to move to the front with its transcript timestamp. Add a 3–4 word on-screen hook overlay.
