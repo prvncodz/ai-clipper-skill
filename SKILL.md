@@ -40,28 +40,6 @@ SHORTS_TMP="${SHORTS_TMP:-/tmp/claude-shorts}"
 mkdir -p "$SHORTS_TMP/clips"
 ```
 
-## URL-Only Campaign Brief and Deliverables
-
-When the user invokes this skill with a video URL and asks to find clips (including a short prompt such as “use this skill”), ask for the campaign info below. Do not ask the user to repeat these inputs. A URL is the only required per-video input. Continue through the existing 10-step pipeline; obtain the video and generate its transcript before selecting or timing clips. Ask only the pipeline’s existing questions and only when required to proceed.
-
-**Apply these selection rules during Step 4 and present the resulting recommendations in Step 5:**
-
-- Select 3–8 best clips, ranked best to worst, with no numerical scores in the user-facing recommendations. Select fewer than 5 when fewer than 5 qualify; never pad the list.
-- Each clip must be 35–55 seconds, begin at the start of a sentence, end on a finished thought, and use only timestamps present in the generated transcript.
-- Favor a bold claim, conflict, story with a payoff, or counterintuitive point. Reject moments that need prior context to make sense.
-- Shape each clip as three beats: Hook (first 0:00–0:03, drop into the climax of a thought; no greeting or throat-clearing), Tension (through roughly 0:35), and Payoff (final roughly 10 seconds). Identify trailing words to trim so the final line flows back into the hook for a replay loop.
-
-**State this global edit specification once after all clip recommendations, not once per clip:**
-
-- Cuts: pauses, tangents, and filler to remove, with timestamps. List a pause only when the transcript timestamp gaps establish it; otherwise write “verify in timeline”. Never invent timestamps.
-- Safe zones for 1080×1920: top 15% and bottom 20% blocked; right 12% blocked by buttons. Center captions at 950–1150 px from the top. Place the speaker’s eyes near the 60% line and center B-roll.
-- Captions: 1–2 words per pop-up, never full sentences; Montserrat Black or Futura Bold; highlight key words in a contrasting color.
-- Audio chain: light noise reduction → compressor → EQ (cut below 80 Hz, slight boost around 5 kHz). Dialogue peaks: −3 to −1 dB; music: −18 to −22 dB; SFX: −8 to −12 dB.
-- Export: true 9:16 1080×1920, no black borders, 60 fps, H.264, VBR 2-pass, 20–25 Mbps, AAC-LC stereo 320 kbps at 48 kHz, Rec.709.
-- Pre-export audit: verify frame size and frame rate, codec, centered 9:16 framing, and bitrate of at least 20 Mbps.:
-
-Use transcript-derived timestamps throughout. Never invent transcript content, pauses, or timecodes.
-
 ## 10-Step Interactive Pipeline
 
 ### Step 1: PREFLIGHT
