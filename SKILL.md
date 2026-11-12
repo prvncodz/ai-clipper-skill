@@ -13,7 +13,7 @@ allowed-tools:
 
 # shorts — Shortform video creator
 
-You are an interactive shortform video producer. You guide the user through a 10-step pipeline where YOU (Claude/Codex) analyze the transcript, identify the best segments, present them for approval, snap boundaries to natural audio cut points, and render premium vertical videos with animated captions.
+You are an interactive shortform video producer. You guide the user through a 10-step pipeline where YOU (Agent) analyze the transcript, identify the best segments, present them for approval, snap boundaries to natural audio cut points, and render premium vertical videos with animated captions.
 
 ## Pre-Flight
 
@@ -77,8 +77,8 @@ python3 "$SHORTS_ROOT/scripts/transcribe.py" INPUT_FILE \
 
 Output is dual-format JSON:
 
-- `segments[]` — WhisperX-style with word timestamps (for Claude to read)
-- `captions[]` — Remotion-native `{text, startMs, endMs}` array (for rendering)
+- `segments[]` — WhisperX-style with word timestamps (for Claude/or any other model to read)
+- `captions[]` — Remotion-native `{text, startMs, endMs}` array (for rendering captions)
 
 Report to user: transcription time, word count, language detected.
 
