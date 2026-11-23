@@ -28,6 +28,7 @@ export const CaptionStyle = z.enum(["bold", "bounce", "clean", "numeral", "rise"
 export type CaptionStyleType = z.infer<typeof CaptionStyle>;
 
 export const ShortVideoPropsSchema = z.object({
+  gaming: z.object({ gameplay: CropSchema, facecam: CropSchema.nullable() }).optional(),
   clipSrc: z.string(),
   sourceWidth: z.number(),
   sourceHeight: z.number(),

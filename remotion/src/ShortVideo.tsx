@@ -1,4 +1,5 @@
 import { AbsoluteFill } from "remotion";
+import { GamingVideo } from "./components/GamingVideo";
 import { VideoFrame } from "./components/VideoFrame";
 import { Captions } from "./components/Captions";
 import { HookOverlay } from "./components/HookOverlay";
@@ -7,6 +8,7 @@ import { fontFaceCSS } from "./styles/fonts";
 import type { ShortVideoProps } from "./types";
 
 export const ShortVideo: React.FC<ShortVideoProps> = ({
+  gaming,
   clipSrc,
   sourceWidth,
   sourceHeight,
@@ -19,6 +21,11 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
   showProgressBar,
   durationInSeconds,
 }) => {
+  if (gaming) {
+    return <GamingVideo layout={gaming} clipSrc={clipSrc} sourceWidth={sourceWidth}
+      sourceHeight={sourceHeight} captions={captions} title={[hookLine1, hookLine2].filter(Boolean).join(" ")} />;
+  }
+
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       {/* Load custom fonts for captions and hook overlay */}

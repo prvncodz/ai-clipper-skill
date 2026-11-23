@@ -113,7 +113,8 @@ async function main() {
 
       // Get reframe data for this clip
       const reframe = reframeData.clips?.[clipName] || {};
-      if (!reframe.crop) {
+      const isGaming = segmentsData.content_type === "gaming";
+      if (!isGaming && !reframe.crop) {
         console.error(JSON.stringify({
           warning: `No reframe data for ${clipName}, using default 9:16 center crop for 1920x1080`,
         }));
@@ -125,6 +126,16 @@ async function main() {
       const [srcW, srcH] = (reframe.source_resolution || "1920x1080")
         .split("x")
         .map(Number);
+
+      if (isGaming) {
+        const validCrop = (r) => r && [r.x, r.y, r.w, r.h].every(Number.isFinite)
+          && r.x >= 0 && r.y >= 0 && r.w > 0 && r.h > 0
+          && r.x + r.w <= srcW && r.y + r.h <= srcH;
+        if (!reframe.source_resolution || !validCrop(seg.gaming?.gameplay)
+            || (seg.gaming.facecam !== null && !validCrop(seg.gaming.facecam))) {
+          throw new Error(`Invalid gaming crop or source resolution for ${clipName}`);
+        }
+      }
 
       // Extract captions for this segment's time range (in milliseconds)
       const segStartMs = seg.start * 1000;
@@ -140,6 +151,7 @@ async function main() {
       const durationInSeconds = seg.end - seg.start;
 
       const inputProps = {
+        ...(isGaming && { gaming: seg.gaming }),
         clipSrc: `${clipBaseUrl}/${clipName}`,
         sourceWidth: srcW,
         sourceHeight: srcH,

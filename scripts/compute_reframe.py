@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Compute reframe coordinates for vertical (9:16) video from landscape clips.
 
-Supports three reframing strategies based on content type:
+Supports these reframing strategies based on content type:
 - talking-head: Face-tracked center crop (follows the speaker's face)
 - screen: Cursor-tracked pan with moderate zoom (follows mouse cursor)
 - podcast: Center crop or dominant-speaker tracking
+- gaming: Source dimensions for the selected gameplay and facecam regions
 
 Usage:
     python3 compute_reframe.py --clips-dir /tmp/claude-shorts/clips/ \
@@ -327,7 +328,7 @@ def main():
     parser = argparse.ArgumentParser(description="Compute reframe coordinates")
     parser.add_argument("--clips-dir", required=True, help="Directory with clip files")
     parser.add_argument("--content-type", required=True,
-                        choices=["talking-head", "screen", "podcast"],
+                        choices=["talking-head", "screen", "podcast", "gaming"],
                         help="Content type for reframing strategy")
     parser.add_argument("--output", required=True, help="Output JSON file")
     parser.add_argument("--zoom", type=float, default=0.55,
@@ -354,7 +355,12 @@ def main():
         clip_name = os.path.basename(clip_path)
         src_w, src_h, fps, duration = get_video_info(clip_path)
 
-        if args.content_type == "talking-head":
+        if args.content_type == "gaming":
+            strategy = "gaming"
+            crop = {"x": 0, "y": 0, "w": src_w, "h": src_h}
+            crop_keyframes = []
+            face_positions = []
+        elif args.content_type == "talking-head":
             face_positions = compute_face_track(clip_path, src_w, src_h)
             crop = compute_crop_face_track(src_w, src_h, face_positions)
             strategy = "face-track"

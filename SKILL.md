@@ -86,14 +86,14 @@ Report to user: transcription time, word count, language detected.
 
 ### Step 3: DETECT CONTENT TYPE
 
-Auto-detect whether the video is talking-head, screen recording, or podcast:
+Generate the baseline content type and sample frames for visual routing:
 
 ```bash
 python3 "$SHORTS_ROOT/scripts/detect_content.py" INPUT_FILE \
-    --output $SHORTS_TMP/content_type.json
+    --output "$SHORTS_TMP/content_type.json" --contact-sheet "$SHORTS_TMP/content.jpg"
 ```
 
-Use the detected type unless the user specified one. Record the effective type for reframing.
+Inspect the contact sheet. Route visible gameplay to **gaming**, including footage without a webcam. A discussion about games, desktop UI, or a webcam in a corner alone is insufficient. For mixed or ambiguous footage, inspect frames from the intended segment. Honor an explicit content type. To record a gaming decision, run `python3 "$SHORTS_ROOT/scripts/detect_content.py" INPUT_FILE --output "$SHORTS_TMP/content_type.json" --content-type gaming`. Carry the effective type into the approved segments and step 8.
 
 - **talking-head**: Face-tracked center crop to 9:16
 - **screen**: Letterboxed framed layout (content centered, dark padding)
@@ -107,7 +107,15 @@ Read the full transcript directly:
 Read $SHORTS_TMP/transcript.json
 ```
 
-Also load the scoring rubric:
+For gaming, run the following scan and use the gaming selection rules below in place of the speech scoring rubric. Continue with transcript cleanup for captions.
+
+```bash
+python3 "$SHORTS_ROOT/scripts/scan_gaming.py" INPUT_FILE "$SHORTS_TMP/gameplay" > "$SHORTS_TMP/gameplay_candidates.json"
+```
+
+Inspect the numbered pages in chronological order. Each page covers 40 seconds. Read its 20 frames left to right, every two seconds. Inspect audio candidate times, funny or surprising dialogue, and visual events independently. Check the surrounding sequence at higher frame rate for each promising moment. Rank by a clear setup, visible payoff, and reaction where present. Silence is valid. Keep the best distinct moments (up to three by default, 3–60 seconds each), preserving the approach, event, and reaction. A loud sound alone is insufficient. Use these picks in step 5.
+
+For other content types, load the scoring rubric:
 
 ```
 Read $SHORTS_ROOT/references/scoring-rubric.md
@@ -149,7 +157,9 @@ Honor requested moments and timing. For automatic picks, rank candidates using t
 
 ### Step 6: SET EDITING OPTIONS
 
-Choose a caption style for each clip from the Caption Style Reference below. Use the spoken payoff, delivery and screen layout to decide. Favor Numeral when a figure carries the story and Rise when a reveal or key phrase deserves emphasis. Give screen demos and dense explanations room to breathe. Honor an explicit style across every clip it applies to.
+For gaming, set the top-level `content_type` to `gaming`. For each segment, put a concise, accurate opening title in `hook_line1`. Inspect full-resolution frames from that segment and add `gaming` with `gameplay` and `facecam` rectangles in original source pixels (`{ "x": ..., "y": ..., "w": ..., "h": ... }`). Measure the webcam panel bounds, excluding borders and overlays. Set `facecam` to null when absent. Choose gameplay bounds that keep the action visible after a centered portrait crop. Recheck the framing at setup and payoff. Gaming uses its own title and white caption treatment.
+
+For other formats, choose a caption style for each clip from the Caption Style Reference below. Use the spoken payoff, delivery and screen layout to decide. Favor Numeral when a figure carries the story and Rise when a reveal or key phrase deserves emphasis. Give screen demos and dense explanations room to breathe. Honor an explicit style across every clip it applies to.
 
 Use the requested platform. Treat “Reels” as Instagram and “YouTube Shorts” as YouTube. Infer a destination when the brief or clip contains a platform-specific cue, such as a request to stitch on TikTok. Use `all` for an unspecified destination with no such cue or a general cross-platform request. For an explicit subset, export each named target in step 10. Report selected timecodes, hooks, styles and platform briefly and continue. If the user asked to review first, present the picks here and apply their feedback before rendering.
 
@@ -188,7 +198,7 @@ python3 "$SHORTS_ROOT/scripts/snap_boundaries.py" \
     --output $SHORTS_TMP/snapped_segments.json
 ```
 
-The script:
+For gaming, the script keeps the selected visual timing and clamps it to the source duration. For other formats, it:
 
 1. Loads word-level timestamps from the transcript
 2. Snaps start times to the nearest word boundary (prefers sentence starts)
@@ -205,7 +215,9 @@ From this point forward, use `snapped_segments.json` instead of `approved_segmen
 
 ### Step 8: PREPARE — Extract Clips + Compute Reframe
 
-Extract each snapped segment via FFmpeg stream copy (near-instant, lossless).
+For gaming, extract each clip with accurate frame timing using `ffmpeg -y -ss START -i INPUT_FILE -t DURATION -map 0:v:0 -map '0:a:0?' -c:v libx264 -preset fast -crf 18 -c:a aac OUTPUT_CLIP`. Use end minus start for DURATION and the same numbered filenames as below.
+
+For other formats, extract each snapped segment via FFmpeg stream copy (near-instant, lossless).
 Use the snapped start/end times from `$SHORTS_TMP/snapped_segments.json`:
 
 ```bash

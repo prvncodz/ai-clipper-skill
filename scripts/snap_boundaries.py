@@ -225,14 +225,14 @@ def main():
 
     args = parser.parse_args()
 
-    # Load data
-    words = load_word_timeline(args.transcript)
-    if not words:
-        print(json.dumps({"error": "No word-level timestamps found in transcript"}))
-        sys.exit(1)
-
     with open(args.segments) as f:
         segments_data = json.load(f)
+
+    gaming = segments_data.get("content_type") == "gaming"
+    words = load_word_timeline(args.transcript)
+    if not words and not gaming:
+        print(json.dumps({"error": "No word-level timestamps found in transcript"}))
+        sys.exit(1)
 
     # Get video duration
     result = subprocess.run(
@@ -244,7 +244,7 @@ def main():
 
     # Detect silences (unless disabled)
     silences = []
-    if not args.no_silence:
+    if not args.no_silence and not gaming:
         silences = detect_silences(args.input_video)
 
     # Snap each segment
@@ -253,7 +253,14 @@ def main():
         old_start = seg["start"]
         old_end = seg["end"]
 
-        new_start, new_end = snap_segment(words, silences, seg, video_duration)
+        if gaming:
+            # The selected action can begin before speech and finish after it.
+            new_start = max(0.0, old_start)
+            new_end = min(video_duration, old_end)
+            if not 0 < new_end - new_start <= 60.0:
+                parser.error(f"Gaming segment {seg.get('id')} needs a valid interval of at most 60s")
+        else:
+            new_start, new_end = snap_segment(words, silences, seg, video_duration)
 
         seg["start"] = new_start
         seg["end"] = new_end

@@ -29,7 +29,7 @@ import tempfile
 import time
 
 
-def sample_frames(video_path, num_frames=10):
+def sample_frames(video_path, num_frames, tmpdir):
     """Extract N evenly-spaced frames from video as JPEG files."""
     # Get duration
     result = subprocess.run(
@@ -43,7 +43,6 @@ def sample_frames(video_path, num_frames=10):
         print(json.dumps({"error": f"Could not determine video duration: {video_path}"}))
         sys.exit(1)
 
-    tmpdir = tempfile.mkdtemp(prefix="detect_content_")
     timestamps = [duration * (i + 0.5) / num_frames for i in range(num_frames)]
     frame_paths = []
 
@@ -57,7 +56,30 @@ def sample_frames(video_path, num_frames=10):
         if os.path.exists(out_path):
             frame_paths.append(out_path)
 
-    return frame_paths, tmpdir
+    return frame_paths
+
+
+def write_contact_sheet(frame_paths, destination):
+    """Retain a reduced copy of each sample for visual content classification."""
+    import cv2
+    import numpy as np
+
+    columns = min(3, len(frame_paths))
+    rows = (len(frame_paths) + columns - 1) // columns
+    cell_w, cell_h = 480, 270
+    sheet = np.zeros((rows * cell_h, columns * cell_w, 3), dtype=np.uint8)
+    for index, path in enumerate(frame_paths):
+        frame = cv2.imread(path)
+        height, width = frame.shape[:2]
+        scale = min(cell_w / width, cell_h / height)
+        resized = cv2.resize(frame, (max(1, round(width * scale)), max(1, round(height * scale))))
+        h, w = resized.shape[:2]
+        x = index % columns * cell_w + (cell_w - w) // 2
+        y = index // columns * cell_h + (cell_h - h) // 2
+        sheet[y:y + h, x:x + w] = resized
+    os.makedirs(os.path.dirname(os.path.abspath(destination)), exist_ok=True)
+    if not cv2.imwrite(destination, sheet):
+        raise OSError(f"Could not save contact sheet to {destination}")
 
 
 def detect_faces(frame_paths):
@@ -162,7 +184,12 @@ def main():
     parser.add_argument("--frames", type=int, default=10,
                         help="Number of frames to sample (default: 10)")
 
+    parser.add_argument("--contact-sheet", help="Save sample frames for visual gameplay review")
+    parser.add_argument("--content-type", choices=["gaming", "screen", "talking-head", "podcast"],
+                        help="Use the requested or visually reviewed type")
     args = parser.parse_args()
+    if args.frames < 1:
+        parser.error("--frames must be positive")
 
     if not os.path.isfile(args.input):
         print(json.dumps({"error": f"Input file not found: {args.input}"}))
@@ -170,33 +197,25 @@ def main():
 
     start = time.time()
 
-    # Sample frames
-    frame_paths, tmpdir = sample_frames(args.input, args.frames)
+    output = {"content_type": args.content_type, "frames_sampled": 0}
+    if args.content_type:
+        output["classification_source"] = "specified"
 
-    if not frame_paths:
-        print(json.dumps({"error": "No frames could be extracted"}))
-        sys.exit(1)
+    if args.contact_sheet or not args.content_type:
+        with tempfile.TemporaryDirectory(prefix="detect_content_") as tmpdir:
+            frame_paths = sample_frames(args.input, args.frames, tmpdir)
+            if not frame_paths:
+                parser.exit(1, "No frames could be extracted\n")
+            output["frames_sampled"] = len(frame_paths)
+            if args.contact_sheet:
+                write_contact_sheet(frame_paths, args.contact_sheet)
+                output["contact_sheet"] = os.path.abspath(args.contact_sheet)
+            if not args.content_type:
+                face_stats = detect_faces(frame_paths)
+                output["content_type"], output["confidence"] = classify(face_stats)
+                output["face_stats"] = face_stats
 
-    # Detect faces
-    face_stats = detect_faces(frame_paths)
-
-    # Classify
-    content_type, confidence = classify(face_stats)
-
-    elapsed = time.time() - start
-
-    # Clean up temp frames
-    import shutil
-    shutil.rmtree(tmpdir, ignore_errors=True)
-
-    output = {
-        "content_type": content_type,
-        "confidence": confidence,
-        "face_stats": face_stats,
-        "frames_sampled": len(frame_paths),
-        "detection_time_sec": round(elapsed, 2),
-    }
-
+    output["detection_time_sec"] = round(time.time() - start, 2)
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     with open(args.output, "w") as f:
         json.dump(output, f, indent=2)
