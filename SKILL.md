@@ -1,7 +1,7 @@
 ---
 name: shorts
 description: >
-  Interactive longform-to-shortform video creator. Extracts viral-ready short clips from long videos using Claude/Codex as the orchestrator. Transcribes with faster-whisper (GPU), Claude scores and presents candidate segments interactively, user picks and adjusts, Remotion renders premium animated captions (Bold/Bounce/Clean styles), FFmpeg exports platform-optimized files (YouTube Shorts, TikTok, Instagram Reels). Use when user says "shorts", "short clips", "shortform", "extract clips", "tiktok from video", "reels from video", "vertical clips", or "create shorts".
+  Automatic longform-to-shortform video creator. Extracts viral-ready short clips from long videos using Claude/Codex as the orchestrator. Transcribes with faster-whisper (GPU), the model selects highlights and matches captions to each clip, Remotion renders Bold, Bounce, Clean, Numeral, or Rise captions, FFmpeg exports platform-optimized files (YouTube Shorts, TikTok, Instagram Reels). Use when user says "shorts", "short clips", "shortform", "extract clips", "tiktok from video", "reels from video", "vertical clips", or "create shorts".
 allowed-tools:
   - Bash
   - Read
@@ -13,17 +13,17 @@ allowed-tools:
 
 # shorts — Shortform video creator
 
-You are an interactive shortform video producer. You guide the user through a 10-step pipeline where YOU (Agent) analyze the transcript, identify the best segments, present them for approval, snap boundaries to natural audio cut points, and render premium vertical videos with animated captions.
+Run all ten steps from source video through validated exports. Use any selections the user already gave, including timecodes, clip count, content type, style, and destination platform. Make the remaining editorial choices from the transcript and content detection. Pause for creative review only when requested.
 
 ## Pre-Flight
 
-Before starting, locate the project root:
+Set SHORTS_ROOT to the directory containing this loaded SKILL.md. If the skill location is unavailable, locate the installation:
 
 ```bash
 # Try common locations in priority order
 SHORTS_ROOT=""
-for dir in "$HOME/.claude/skills/shorts" "$HOME/.claude/skills/claude-shorts" "$HOME/claude-shorts" "$(pwd)"; do
-    if [ -f "$dir/SKILL.md" ]; then
+for dir in "$PWD" "$HOME/.agents/skills/shorts" "$HOME/.claude/skills/shorts" "$HOME/.claude/skills/claude-shorts" "$HOME/claude-shorts"; do
+    if [ -f "$dir/remotion/render.mjs" ] && [ -f "$dir/scripts/snap_boundaries.py" ]; then
         SHORTS_ROOT="$dir"
         break
     fi
@@ -33,25 +33,27 @@ if [ -z "$SHORTS_ROOT" ]; then
 fi
 ```
 
-Set up the temp directory (configurable via `SHORTS_TMP` environment variable):
+Create a fresh run directory so prior clips cannot enter this export. Reuse the resolved paths for all ten steps. Set OUTPUT_DIR to the requested destination or ./shorts by default.
 
 ```bash
-SHORTS_TMP="${SHORTS_TMP:-/tmp/claude-shorts}"
+SHORTS_TMP_BASE="${SHORTS_TMP:-/tmp/claude-shorts}"
+mkdir -p "$SHORTS_TMP_BASE"
+SHORTS_TMP=$(mktemp -d "$SHORTS_TMP_BASE/run.XXXXXXXX")
+OUTPUT_DIR="${OUTPUT_DIR:-./shorts}"
 mkdir -p "$SHORTS_TMP/clips"
 ```
 
-## 10-Step Interactive Pipeline
+## 10-Step Pipeline
 
 ### Step 1: PREFLIGHT
 
 Run safety checks on the input video:
 
 ```bash
-bash "$SHORTS_ROOT/scripts/preflight.sh" INPUT_FILE [OUTPUT_DIR]
+bash "$SHORTS_ROOT/scripts/preflight.sh" INPUT_FILE "$OUTPUT_DIR"
 ```
 
-If preflight fails, report errors and stop. If warnings exist, report them and ask
-the user whether to proceed.
+If preflight fails, report errors and stop. For existing exports, use a fresh output subdirectory and carry it through export and validation. For a disk-space warning, check available space at the working directory and proceed only if it fits the estimate. Report unresolved blockers.
 
 Also detect GPU capabilities:
 
@@ -91,7 +93,7 @@ python3 "$SHORTS_ROOT/scripts/detect_content.py" INPUT_FILE \
     --output $SHORTS_TMP/content_type.json
 ```
 
-Report detected type to user. Ask if they want to override.
+Use the detected type unless the user specified one. Record the effective type for reframing.
 
 - **talking-head**: Face-tracked center crop to 9:16
 - **screen**: Letterboxed framed layout (content centered, dark padding)
@@ -111,7 +113,7 @@ Also load the scoring rubric:
 Read $SHORTS_ROOT/references/scoring-rubric.md
 ```
 
-Score 8-12 candidate segments (15-55 seconds each) on 5 dimensions:
+For a typical long video, score 8-12 candidate segments (15-55 seconds each). Use fewer when the source has fewer distinct moments. Score each candidate on 5 dimensions:
 
 | Dimension | Weight | What to look for |
 | ----------- | -------- | ------------------ |
@@ -132,7 +134,7 @@ For each candidate, identify:
 **Transcript cleanup:** While analyzing, also produce cleaned captions for rendering.
 Read the `captions[]` array from transcript.json, then:
 
-1. Remove filler words (um, uh, you know, like, sort of, I mean, right, basically, actually)
+1. Remove a filler only when its omission preserves meaning. Keep comparisons, approximations, names and figures intact.
 2. Fix obvious transcription errors based on surrounding context
 3. Consolidate incomplete sentence fragments where appropriate
 4. **Keep all timestamps unchanged** — only modify the `text` field
@@ -141,32 +143,15 @@ Write the cleaned transcript to `$SHORTS_TMP/transcript_cleaned.json` using the 
 JSON structure as transcript.json (both `segments` and `captions` arrays). The `captions`
 array should contain the cleaned text; copy `segments` as-is.
 
-### Step 5: PRESENT — Show Candidates Interactively
+### Step 5: SELECT HIGHLIGHTS
 
-Present candidates in a formatted table:
+Honor requested moments and timing. For automatic picks, rank candidates using the rubric. Keep the highest-scoring non-overlapping cuts that deliver distinct payoffs and make sense without the surrounding conversation. Default to up to three scoring at least 60. Use the requested count when the source supports it. If fewer qualify, explain the shortfall. If none qualify, report why and finish before rendering.
 
-```
-| # | Time          | Dur  | Score | Hook                              | Why                                    |
-|---|---------------|------|-------|-----------------------------------|----------------------------------------|
-| 1 | 04:22 → 05:01 | 39s  | 87    | "Nobody talks about this..."     | Contrarian take with data backing      |
-| 2 | 12:45 → 13:28 | 43s  | 82    | "Here's the exact framework..."  | Complete actionable method, clean arc   |
-| 3 | 08:11 → 08:52 | 41s  | 79    | "I tested this for 6 months..."  | Personal story + surprising result     |
-```
+### Step 6: SET EDITING OPTIONS
 
-Then ask the user using AskUserQuestion:
+Choose a caption style for each clip from the Caption Style Reference below. Use the spoken payoff, delivery and screen layout to decide. Favor Numeral when a figure carries the story and Rise when a reveal or key phrase deserves emphasis. Give screen demos and dense explanations room to breathe. Honor an explicit style across every clip it applies to.
 
-1. **Which segments?** — "all", specific numbers, or "none, re-analyze"
-2. **Caption style?** — bold (ALL CAPS pop-in), bounce (bouncy colorful), clean (minimal fade)
-3. **Platform?** — youtube, tiktok, instagram, or all
-
-### Step 6: APPROVE — Interactive Adjustment Loop
-
-After user selects segments:
-
-- Show selected segments with exact timestamps
-- Allow timecode adjustments ("move segment 2 start back 3 seconds")
-- Confirm final selections
-- Estimate render time (~15-30s per segment with Remotion)
+Use the requested platform. Treat “Reels” as Instagram and “YouTube Shorts” as YouTube. Infer a destination when the brief or clip contains a platform-specific cue, such as a request to stitch on TikTok. Use `all` for an unspecified destination with no such cue or a general cross-platform request. For an explicit subset, export each named target in step 10. Report selected timecodes, hooks, styles and platform briefly and continue. If the user asked to review first, present the picks here and apply their feedback before rendering.
 
 Write approved segments to:
 
@@ -180,10 +165,10 @@ cat > $SHORTS_TMP/approved_segments.json << 'EOF'
       "end": 301.0,
       "hook_line1": "Nobody talks about this...",
       "hook_line2": "The hidden cost of scaling",
-      "score": 87
+      "score": 87,
+      "style": "rise"
     }
   ],
-  "style": "bold",
   "platform": "all",
   "content_type": "talking-head"
 }
@@ -241,14 +226,13 @@ Report to user: clips extracted, content type per clip, reframe strategy.
 
 ### Step 9: RENDER via Remotion
 
-Render all snapped segments with the selected caption style:
+Render the snapped segments using each segment’s saved style:
 
 ```bash
 node "$SHORTS_ROOT/remotion/render.mjs" \
     --segments $SHORTS_TMP/snapped_segments.json \
     --reframe $SHORTS_TMP/reframe.json \
     --captions $SHORTS_TMP/transcript_cleaned.json \
-    --style STYLE \
     --clips-dir $SHORTS_TMP/clips/ \
     --output-dir $SHORTS_TMP/render/
 ```
@@ -264,13 +248,13 @@ Report progress to user as each segment renders.
 
 ### Step 10: EXPORT — Platform-Optimized Encoding
 
-Export rendered shorts with platform-specific encoding:
+Export rendered shorts with the selected platform value. Use the output directory from preflight for both export and validation:
 
 ```bash
 bash "$SHORTS_ROOT/scripts/export.sh" \
     --input-dir $SHORTS_TMP/render/ \
     --platform PLATFORM \
-    --output-dir ./shorts/
+    --output-dir "$OUTPUT_DIR"
 ```
 
 Platform encoding specs:
@@ -295,7 +279,7 @@ Present final summary table:
 **Post-export validation:** Run validation on all exported files:
 
 ```bash
-bash "$SHORTS_ROOT/scripts/validate.sh" --output-dir ./shorts/
+bash "$SHORTS_ROOT/scripts/validate.sh" --output-dir "$OUTPUT_DIR"
 ```
 
 Checks: file is playable, resolution is 1080x1920, audio track exists and isn't silent,
@@ -307,7 +291,7 @@ or re-exported before delivery.
 
 - Report costs. Remotion rendering is local and free; GPU power is the only potential cost.
 - If a step fails, report the error and suggest fixes.
-- After export, offer to delete `$SHORTS_TMP/`.
+- Retain working files for revisions unless the user requests cleanup.
 
 ## Caption Style Reference
 
@@ -316,12 +300,14 @@ or re-exported before delivery.
 | **bold** | Montserrat Bold | ALL CAPS, pop-in, yellow active word | Business, education, motivation |
 | **bounce** | Bangers | Bouncy scale, rotating bright colors | Entertainment, reactions, energy |
 | **clean** | Inter Bold | Minimal fade-in, white + shadow | Professional, calm, interviews |
+| **numeral** | Display digits | Rolling digits | Statistics, dates, prices and comparisons |
+| **rise** | Display lettering | Staggered letter lift | Storytelling, reveals and emphatic phrases |
 
 Load `references/caption-styles.md` for detailed visual specs and spring configs.
 
 ## Configurable Parameters
 
-These defaults work well for most content. Offer alternatives when the user has specific needs.
+Apply defaults automatically and honor user-specified settings.
 
 | Parameter | Default | Flag/Var | When to change |
 | ----------- | --------- | ---------- | ---------------- |
@@ -329,7 +315,7 @@ These defaults work well for most content. Offer alternatives when the user has 
 | Screen zoom | `0.55` | `--zoom 0.4` | More context visible in screen recordings |
 | Cursor tracking | enabled | `--no-cursor-track` | Static screen content (slides, documents) |
 | Silence detection | enabled | `--no-silence` | Faster processing, word-boundary-only snapping |
-| Score threshold | 60 | (SKILL.md instruction) | Lower for longer videos with fewer highlights |
+| Score threshold | 60 | (SKILL.md instruction) | Override when requested |
 | Segment duration | 15-55s | (SKILL.md instruction) | Adjust per platform (TikTok prefers 21-34s) |
 | Temp directory | `/tmp/claude-shorts/` | `SHORTS_TMP` env var | Systems with limited /tmp space |
 | Export platform | `all` | `--platform youtube` | Single-platform targeting |

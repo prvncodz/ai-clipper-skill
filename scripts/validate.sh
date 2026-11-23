@@ -45,14 +45,14 @@ for file in "$OUTPUT_DIR"/short_*.mp4; do
     fi
 
     # 2. Check video stream exists and resolution is 1080x1920
-    width=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=width -of csv=p=0 "$file" 2>/dev/null || echo "0")
-    height=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=height -of csv=p=0 "$file" 2>/dev/null || echo "0")
+    width=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=width -of csv=p=0 "$file" 2>/dev/null | tr -d ',' || echo "0")
+    height=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=height -of csv=p=0 "$file" 2>/dev/null | tr -d ',' || echo "0")
     if [ "$width" != "1080" ] || [ "$height" != "1920" ]; then
         ISSUES+=("Resolution is ${width}x${height}, expected 1080x1920")
     fi
 
     # 3. Check audio track exists
-    audio_codec=$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$file" 2>/dev/null || echo "")
+    audio_codec=$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$file" 2>/dev/null | tr -d ',' || echo "")
     if [ -z "$audio_codec" ]; then
         ISSUES+=("No audio track found")
     fi
@@ -95,7 +95,7 @@ for file in "$OUTPUT_DIR"/short_*.mp4; do
     fi
 
     # 7. Check video codec is H.264
-    video_codec=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$file" 2>/dev/null || echo "")
+    video_codec=$(ffprobe -v quiet -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$file" 2>/dev/null | tr -d ',' || echo "")
     if [ "$video_codec" != "h264" ]; then
         ISSUES+=("Video codec is ${video_codec}, expected h264")
     fi

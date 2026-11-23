@@ -1,6 +1,7 @@
 import type { Caption, CaptionStyleType } from "../types";
 import { BoldCaptions } from "./BoldCaptions";
 import { BounceCaptions } from "./BounceCaptions";
+import { EmphasisCaptions } from "./EmphasisCaptions";
 import { CleanCaptions } from "./CleanCaptions";
 
 interface CaptionsProps {
@@ -21,6 +22,9 @@ export const Captions: React.FC<CaptionsProps> = ({ captions, style }) => {
       return <BounceCaptions captions={captions} />;
     case "clean":
       return <CleanCaptions captions={captions} />;
+    case "rise":
+    case "numeral":
+      return <EmphasisCaptions captions={captions} style={style} />;
     default:
       return <BoldCaptions captions={captions} />;
   }

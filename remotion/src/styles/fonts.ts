@@ -12,6 +12,11 @@ import { staticFile } from "remotion";
  * For rendering, Remotion handles font loading automatically.
  */
 export const FONTS = {
+  anton: {
+    family: "Anton",
+    src: staticFile("fonts/Anton-Regular.ttf"),
+    weight: "400",
+  },
   montserrat: {
     family: "Montserrat",
     src: staticFile("fonts/Montserrat-Bold.ttf"),

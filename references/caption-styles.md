@@ -1,6 +1,6 @@
 # Caption Styles — Visual Specifications
 
-Three premium caption presets for different content tones. Each uses `@remotion/captions` createTikTokStyleCaptions() for word-level timing.
+Five caption presets for different content tones. Each uses `@remotion/captions` createTikTokStyleCaptions() for word-level timing.
 
 ## Bold Style
 
@@ -76,6 +76,16 @@ Best for: Professional, interviews, calm content, podcasts.
 
 **Visual reference**: Minimal, readable, doesn't distract from the speaker. Subtle active-word highlighting through slight color change rather than bold contrast.
 
+## Numeral
+
+Use Numeral for a statistic, year, price or comparison that the audience should remember. Digits roll into place like an odometer. Preserve units, signs and percentages when cleaning the transcript.
+
+## Rise
+
+Use Rise for a reveal, headline or emphatic phrase. Staggered letters lift into place. For dense screen demonstrations, Clean gives viewers more room to read the source footage.
+
+These two presets adapt the motion from [Subtle](https://github.com/0xpratzyy/subtle) to the Shorts caption layer.
+
 ## Font Files
 
 All fonts must be placed in `remotion/public/fonts/`:
@@ -87,7 +97,9 @@ Download from: https://fonts.google.com/
 
 ## Caption Positioning
 
-All styles share the same vertical positioning:
+Numeral and Rise place the emphasis word at 57% of the frame height. Their supporting caption starts 176px below that point.
+
+Bold, Bounce and Clean use the following placement:
 - **Bottom offset**: 350px from bottom edge of 1920px frame
 - This places captions above the platform's built-in UI elements (like/comment/share buttons)
 - Safe zone for TikTok: 150px from bottom, 64px from sides

@@ -1,10 +1,10 @@
 # claude-shorts
 
-Standalone interactive shortform video creator. Extracts viral-ready short clips from longform videos using an interactive Claude Code workflow with Remotion-rendered premium captions.
+Standalone shortform video creator. Extracts viral-ready short clips from longform videos using a model-directed workflow with Remotion-rendered premium captions.
 
 ## Architecture
 
-- **Claude Code** is the orchestrator — reads transcripts, scores segments, presents to user interactively
+- **Claude Code** is the orchestrator — reads transcripts, scores segments, chooses clips, captions and export settings unless the user supplies preferences
 - **faster-whisper** handles GPU-accelerated transcription with word-level timestamps
 - **Remotion** renders 1080x1920 vertical video with animated captions (single-pass)
 - **FFmpeg** extracts audio, cuts segments (stream copy), and does platform-specific export encoding

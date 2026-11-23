@@ -2,18 +2,18 @@
 
 ![claude-shorts header](claude-shorts-header.jpeg)
 
-Interactive longform-to-shortform video creator powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Extracts viral-ready vertical clips from long videos using Claude as the intelligent orchestrator with Remotion-rendered premium animated captions.
+Automatic longform-to-shortform video creator powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Extracts viral-ready vertical clips from long videos using Claude as the intelligent orchestrator with Remotion-rendered premium animated captions.
 
 ## How It Works
 
-Claude Code guides you through a 10-step interactive pipeline:
+Claude Code runs the existing 10-step pipeline:
 
 1. **Preflight** - Validates input video, checks disk space, detects GPU
 2. **Transcribe** - GPU-accelerated transcription with word-level timestamps (faster-whisper)
 3. **Detect Content** - Auto-classifies: talking-head, screen recording, or podcast
 4. **Analyze** - Claude reads the full transcript and scores 8-12 candidate segments
 5. **Present** - Shows candidates in a formatted table with scores, hooks, and rationale
-6. **Approve** - You pick segments, adjust timecodes, choose caption style and platform
+6. **Select** - The model chooses self-contained segments, caption styles and an export platform using your preferences when supplied
 7. **Snap Boundaries** - Aligns cut points to word boundaries, sentence endings, and audio silences
 8. **Prepare** - Extracts clips (FFmpeg stream copy) and computes reframe coordinates
 9. **Render** - Remotion renders 1080x1920 vertical video with animated captions
@@ -26,7 +26,7 @@ Claude Code guides you through a 10-step interactive pipeline:
 ## Features
 
 - **Claude-powered segment scoring** - 5-dimension rubric (hook strength, coherence, emotion, value density, payoff) with weighted scoring. No heuristic keyword matching - Claude understands narrative arcs.
-- **3 caption styles** - Bold (ALL CAPS, yellow highlights), Bounce (bouncy spring, rotating colors), Clean (minimal fade-in)
+- **5 caption styles** - Bold (ALL CAPS, yellow highlights), Bounce (bouncy spring, rotating colors), Clean (minimal fade-in), Numeral (rolling digits), Rise (staggered letters)
 - **Cursor tracking** - For screen recordings, detects mouse cursor via frame differencing and smoothly pans the crop to follow it
 - **Audio-aware boundary snapping** - Never cuts mid-word or mid-sentence. Extends to natural sentence endings and silence points.
 - **Remotion rendering** - React-based single-pass rendering with spring animations, word-level karaoke highlighting, hook text overlays, and progress bars
@@ -81,17 +81,17 @@ In Claude Code, invoke the skill:
 /shorts
 ```
 
-Then provide your video file when prompted. Claude will:
+Pass a video path with the command. You can also specify the clips, caption style or platform you want. The model will:
 
 1. Transcribe the video
 2. Present scored segment candidates
-3. Ask which segments to render, caption style, and target platform
+3. Select clips, match a caption style to each one, and choose the target platform
 4. Render and export the final shorts
 
 ### Example Interaction
 
 ```
-You: /shorts ~/Videos/my-talk.mp4
+You: /shorts ~/Videos/my-talk.mp4 for YouTube Shorts
 Claude: [Transcribes, detects content type, scores segments]
 
 | # | Time          | Dur  | Score | Hook                           |
@@ -100,8 +100,7 @@ Claude: [Transcribes, detects content type, scores segments]
 | 2 | 12:45 - 13:28 | 43s  | 82    | "Here's the exact framework." |
 | 3 | 08:11 - 08:52 | 41s  | 79    | "I tested this for 6 months." |
 
-Claude: Which segments? Caption style? Platform?
-You: 1 and 3, bounce style, youtube
+Claude: I selected 1 for its standalone claim and 3 for its six-month experiment. I’ll use Bold for the claim and Numeral for the experiment, then export both for YouTube Shorts.
 
 Claude: [Snaps boundaries, extracts clips, renders, exports]
 Output: shorts/short_01_yt.mp4, shorts/short_03_yt.mp4
@@ -111,7 +110,7 @@ Output: shorts/short_01_yt.mp4, shorts/short_03_yt.mp4
 
 ```
 claude-shorts/
-├── SKILL.md                           # 10-step interactive pipeline (Claude Code skill)
+├── SKILL.md                           # 10-step clip pipeline (Claude Code skill)
 ├── CLAUDE.md                          # Project-level instructions
 ├── install.sh                         # Install to ~/.claude/skills/
 ├── setup.sh                           # Python + Node dependency installer
@@ -161,6 +160,10 @@ claude-shorts/
 | **Bold** | Montserrat Bold | Pop-in spring, yellow active word | Business, education |
 | **Bounce** | Bangers | Bouncy scale 70-120-100%, rotating colors | Entertainment, energy |
 | **Clean** | Inter Bold | Fade-in opacity, white + shadow | Professional, interviews |
+| **Numeral** | Montserrat with oversized emphasis | Rolling digits | Statistics, dates, prices |
+| **Rise** | Montserrat with oversized emphasis | Letters rise in sequence | Stories, reveals |
+
+Numeral and Rise adapt the animation styles from [Subtle](https://github.com/0xpratzyy/subtle).
 
 ## Platform Export Specs
 

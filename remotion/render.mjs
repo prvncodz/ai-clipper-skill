@@ -42,14 +42,13 @@ async function main() {
   const segmentsPath = args.segments;
   const reframePath = args.reframe;
   const captionsPath = args.captions;
-  const style = args.style || "bold";
   const clipsDir = args["clips-dir"];
   const outputDir = args["output-dir"] || "/tmp/claude-shorts/render/";
 
   if (!segmentsPath || !reframePath || !captionsPath || !clipsDir) {
     console.error(JSON.stringify({
       error: "Missing required arguments",
-      usage: "node render.mjs --segments FILE --reframe FILE --captions FILE --clips-dir DIR [--style bold|bounce|clean] [--output-dir DIR]",
+      usage: "node render.mjs --segments FILE --reframe FILE --captions FILE --clips-dir DIR [--style bold|bounce|clean|numeral|rise] [--output-dir DIR]",
     }));
     process.exit(1);
   }
@@ -147,7 +146,7 @@ async function main() {
         crop,
         cropKeyframes,
         captions: segCaptions,
-        captionStyle: style,
+        captionStyle: args.style || seg.style || segmentsData.style || "bold",
         hookLine1: seg.hook_line1 || "",
         hookLine2: seg.hook_line2 || "",
         showProgressBar: true,

@@ -159,7 +159,7 @@ const ShortVideoPropsSchema = z.object({
   sourceHeight: z.number(),
   crop: CropSchema,
   captions: z.array(CaptionSchema),
-  captionStyle: z.enum(["bold", "bounce", "clean"]),
+  captionStyle: z.enum(["bold", "bounce", "clean", "numeral", "rise"]),
   hookLine1: z.string().optional().default(""),
   hookLine2: z.string().optional().default(""),
   showProgressBar: z.boolean().optional().default(true),
