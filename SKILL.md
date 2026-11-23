@@ -65,7 +65,7 @@ Report to user: input duration, resolution, GPU status, estimated processing tim
 
 ### Step 2: TRANSCRIBE
 
-Transcribe with faster-whisper (GPU-accelerated, word-level timestamps).
+Transcribe with faster-whisper and keep word-level timestamps. Use `--model small` for interviews and podcasts on a CPU-only transcription setup. Honor an explicitly requested model. For other runs, use the script default.
 Audio extraction is handled internally by transcribe.py:
 
 ```bash
@@ -76,6 +76,20 @@ source "$VENV/bin/activate"
 python3 "$SHORTS_ROOT/scripts/transcribe.py" INPUT_FILE \
     --output $SHORTS_TMP/transcript.json
 ```
+
+When the user requests experimental Intel GPU transcription and the local
+`shorts-openvino` launcher is available, use it in place of the faster-whisper
+command:
+
+```bash
+shorts-openvino INPUT_FILE --output "$SHORTS_TMP/transcript.json"
+```
+
+The launcher selects `--backend openvino` and a local OpenVINO Whisper model.
+To use a separate OpenVINO GenAI environment, run `scripts/transcribe.py` in
+that environment with `--backend openvino --model /path/to/openvino-whisper`.
+Review names, numbers, and word timing against the source before exporting
+clips from the experimental backend.
 
 Output is dual-format JSON:
 
@@ -323,7 +337,7 @@ Apply defaults automatically and honor user-specified settings.
 
 | Parameter | Default | Flag/Var | When to change |
 | ----------- | --------- | ---------- | ---------------- |
-| Whisper model | `large-v3` | `--model small` | Low VRAM (< 6 GB) |
+| Whisper model | `small` for CPU interviews and podcasts, `large-v3` otherwise | `--model MODEL` | Override for a specific speed or accuracy requirement |
 | Screen zoom | `0.55` | `--zoom 0.4` | More context visible in screen recordings |
 | Cursor tracking | enabled | `--no-cursor-track` | Static screen content (slides, documents) |
 | Silence detection | enabled | `--no-silence` | Faster processing, word-boundary-only snapping |

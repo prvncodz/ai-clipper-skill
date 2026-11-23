@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Transcribe video with faster-whisper, output dual-format JSON.
+"""Transcribe video with faster-whisper or experimental OpenVINO.
 
 Produces both WhisperX-style segments (for Claude to read) and
 Remotion-native captions (for rendering with @remotion/captions).
@@ -40,6 +40,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import wave
 
 
 def extract_audio(video_path, audio_path):
@@ -116,12 +117,73 @@ def transcribe(audio_path, model_size="large-v3", device="auto", compute_type="a
     return segments, captions, info, device, compute_type
 
 
+def transcribe_openvino(audio_path, model_path):
+    """Generate the same word-timed transcript format on an Intel GPU."""
+    import numpy as np
+    from openvino_genai import ASRPipeline
+
+    with wave.open(audio_path, "rb") as audio:
+        samples = np.frombuffer(audio.readframes(audio.getnframes()), dtype="<i2")
+        samples = samples.astype(np.float32) / 32768
+
+    model_path = os.path.abspath(model_path)
+    working_directory = os.getcwd()
+    # The Intel compiler can emit a diagnostics file in the current directory.
+    with tempfile.TemporaryDirectory(prefix="shorts-openvino-") as driver_directory:
+        try:
+            os.chdir(driver_directory)
+            pipeline = ASRPipeline(model_path, "GPU", word_timestamps=True)
+            result = pipeline.generate(samples, return_timestamps=True, word_timestamps=True)
+        finally:
+            os.chdir(working_directory)
+    words = result.words[0] if result.words else []
+    chunks = result.chunks[0] if result.chunks else []
+    if result.texts and result.texts[0].strip() and not words:
+        raise RuntimeError("OpenVINO returned text without word timestamps.")
+
+    duration = len(samples) / 16000
+    captions = []
+    for word in words:
+        if not 0 <= word.start_ts <= word.end_ts <= duration + 0.1:
+            raise RuntimeError("OpenVINO returned an invalid word timestamp.")
+        captions.append({
+            "text": word.text,
+            "startMs": int(min(word.start_ts, duration) * 1000),
+            "endMs": int(min(word.end_ts, duration) * 1000),
+        })
+
+    segments = []
+    start_index = 0
+    for boundary in [chunk.start_ts for chunk in chunks[1:]] + [float("inf")]:
+        end_index = start_index
+        while end_index < len(words) and words[end_index].start_ts < boundary:
+            end_index += 1
+        group = words[start_index:end_index]
+        if group:
+            segments.append({
+                "start": round(min(group[0].start_ts, duration), 3),
+                "end": round(min(max(word.end_ts for word in group), duration), 3),
+                "text": "".join(word.text for word in group).strip(),
+                "words": [
+                    {"word": word.text.strip(), "start": round(min(word.start_ts, duration), 3),
+                     "end": round(min(word.end_ts, duration), 3)}
+                    for word in group
+                ],
+            })
+        start_index = end_index
+
+    language = result.languages[0].removeprefix("<|").removesuffix("|>") if result.languages else None
+    return segments, captions, language
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Transcribe video with faster-whisper")
+    parser = argparse.ArgumentParser(description="Transcribe video with word-level captions")
     parser.add_argument("input", help="Input video or audio file")
     parser.add_argument("--output", required=True, help="Output JSON file path")
-    parser.add_argument("--model", default="large-v3",
-                        help="Whisper model size (default: large-v3)")
+    parser.add_argument("--backend", choices=["faster-whisper", "openvino"], default="faster-whisper",
+                        help="Use openvino to opt into experimental Intel GPU transcription")
+    parser.add_argument("--model",
+                        help="Whisper model size (default: large-v3) or OpenVINO model directory")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"],
                         help="Compute device (default: auto)")
     parser.add_argument("--compute-type", default="auto",
@@ -129,6 +191,13 @@ def main():
                         help="Compute type (default: auto)")
 
     args = parser.parse_args()
+    use_openvino = args.backend == "openvino"
+    if use_openvino:
+        if not args.model or not os.path.isdir(args.model):
+            parser.error("--backend openvino requires --model PATH to an OpenVINO Whisper directory")
+        if args.device != "auto" or args.compute_type != "auto":
+            parser.error("OpenVINO uses the Intel GPU and the precision of the supplied model")
+    model = args.model or "large-v3"
 
     if not os.path.isfile(args.input):
         print(json.dumps({"error": f"Input file not found: {args.input}"}))
@@ -146,17 +215,26 @@ def main():
          "-show_entries", "stream=codec_type", "-of", "csv=p=0", args.input],
         capture_output=True, text=True
     )
-    if "video" in probe.stdout:
-        tmp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-        tmp_audio = tmp_file.name
-        tmp_file.close()
-        audio_path = tmp_audio
-        extract_audio(args.input, audio_path)
-
     try:
-        segments, captions, info, actual_device, actual_compute = transcribe(
-            audio_path, args.model, args.device, args.compute_type
-        )
+        if use_openvino or "video" in probe.stdout:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+                tmp_audio = tmp_file.name
+            audio_path = tmp_audio
+            extract_audio(args.input, audio_path)
+
+        if use_openvino:
+            segments, captions, language = transcribe_openvino(audio_path, model)
+            probability, actual_device, actual_compute = None, "gpu", "model-defined"
+        else:
+            segments, captions, info, actual_device, actual_compute = transcribe(
+                audio_path, model, args.device, args.compute_type
+            )
+            language, probability = info.language, round(info.language_probability, 3)
+    except (ImportError, RuntimeError) as error:
+        if not use_openvino:
+            raise
+        print(json.dumps({"error": f"OpenVINO transcription failed: {error}"}), file=sys.stderr)
+        sys.exit(1)
     finally:
         if tmp_audio and os.path.exists(tmp_audio):
             os.unlink(tmp_audio)
@@ -175,17 +253,19 @@ def main():
     word_count = sum(len(seg.get("words", [])) for seg in segments)
 
     output = {
-        "language": info.language,
-        "language_probability": round(info.language_probability, 3),
+        "language": language,
+        "language_probability": probability,
         "duration": round(duration, 1),
         "word_count": word_count,
-        "model": args.model,
+        "model": model,
         "device": actual_device,
         "compute_type": actual_compute,
         "transcription_time_sec": round(elapsed, 1),
         "segments": segments,
         "captions": captions,
     }
+    if use_openvino:
+        output["backend"] = args.backend
 
     # Ensure output directory exists
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
@@ -198,12 +278,12 @@ def main():
         "action": "transcribe",
         "input": args.input,
         "output": args.output,
-        "language": info.language,
+        "language": language,
         "duration": round(duration, 1),
         "word_count": word_count,
         "segment_count": len(segments),
         "caption_count": len(captions),
-        "model": args.model,
+        "model": model,
         "transcription_time_sec": round(elapsed, 1),
         "realtime_factor": round(duration / elapsed, 1) if elapsed > 0 else 0,
     }
