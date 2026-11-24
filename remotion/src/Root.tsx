@@ -23,7 +23,6 @@ export const Root: React.FC = () => {
           captionStyle: "bold" as const,
           hookLine1: "",
           hookLine2: "",
-          showProgressBar: true,
           durationInSeconds: 30,
         }}
         calculateMetadata={({ props }) => {

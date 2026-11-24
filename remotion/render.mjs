@@ -48,7 +48,7 @@ async function main() {
   if (!segmentsPath || !reframePath || !captionsPath || !clipsDir) {
     console.error(JSON.stringify({
       error: "Missing required arguments",
-      usage: "node render.mjs --segments FILE --reframe FILE --captions FILE --clips-dir DIR [--style bold|bounce|clean|numeral|rise] [--output-dir DIR]",
+      usage: "node render.mjs --segments FILE --reframe FILE --captions FILE --clips-dir DIR [--style bold|bounce|clean|numeral|rise|studio] [--output-dir DIR]",
     }));
     process.exit(1);
   }
@@ -114,6 +114,7 @@ async function main() {
       // Get reframe data for this clip
       const reframe = reframeData.clips?.[clipName] || {};
       const isGaming = segmentsData.content_type === "gaming";
+      const isPodcast = (seg.content_type || segmentsData.content_type) === "podcast";
       if (!isGaming && !reframe.crop) {
         console.error(JSON.stringify({
           warning: `No reframe data for ${clipName}, using default 9:16 center crop for 1920x1080`,
@@ -152,16 +153,16 @@ async function main() {
 
       const inputProps = {
         ...(isGaming && { gaming: seg.gaming }),
+        podcast: isPodcast,
         clipSrc: `${clipBaseUrl}/${clipName}`,
         sourceWidth: srcW,
         sourceHeight: srcH,
         crop,
         cropKeyframes,
         captions: segCaptions,
-        captionStyle: args.style || seg.style || segmentsData.style || "bold",
+        captionStyle: args.style || seg.style || segmentsData.style || (isPodcast ? "numeral" : "bold"),
         hookLine1: seg.hook_line1 || "",
         hookLine2: seg.hook_line2 || "",
-        showProgressBar: true,
         durationInSeconds,
       };
 

@@ -7,6 +7,7 @@ interface VideoFrameProps {
   sourceHeight: number;
   crop: Crop;
   cropKeyframes?: CropKeyframe[];
+  podcast?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export const VideoFrame: React.FC<VideoFrameProps> = ({
   sourceHeight,
   crop,
   cropKeyframes,
+  podcast = false,
 }) => {
   if (!clipSrc) return null;
 
@@ -35,8 +37,10 @@ export const VideoFrame: React.FC<VideoFrameProps> = ({
 
   // Scale factor: how much to scale source so crop.w fills 1080px
   const outputWidth = 1080;
-  const outputHeight = 1920;
-  const scale = outputWidth / crop.w;
+  const outputHeight = podcast ? 1160 : 1920;
+  const scale = podcast
+    ? Math.max(outputWidth / sourceWidth, outputHeight / sourceHeight)
+    : outputWidth / crop.w;
 
   // Determine current crop X (animated or static)
   let cropX = crop.x;
@@ -54,13 +58,15 @@ export const VideoFrame: React.FC<VideoFrameProps> = ({
   const scaledHeight = sourceHeight * scale;
 
   // Offset to position the crop region at (0,0)
-  const translateX = -cropX * scale;
-  const translateY = -crop.y * scale;
+  const translateX = podcast
+    ? -Math.max(0, Math.min(scaledWidth - outputWidth, (cropX + crop.w / 2) * scale - outputWidth / 2))
+    : -cropX * scale;
+  const translateY = podcast ? (outputHeight - scaledHeight) / 2 : -crop.y * scale;
 
   // Auto-detect framed layout: video doesn't fill full output height.
   // Position in content zone (below 200px hook text area) for screen recordings.
   const hookZone = 200;
-  const topOffset = scaledHeight < outputHeight ? hookZone : 0;
+  const topOffset = podcast ? 330 : scaledHeight < outputHeight ? hookZone : 0;
 
   return (
     <div

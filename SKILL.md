@@ -111,7 +111,7 @@ Inspect the contact sheet. Route visible gameplay to **gaming**, including foota
 
 - **talking-head**: Face-tracked center crop to 9:16
 - **screen**: Letterboxed framed layout (content centered, dark padding)
-- **podcast**: Side-by-side speaker tracking or center crop
+- **podcast**: Face-centered video in a wider window with black space for the title and below the frame
 
 ### Step 4: ANALYZE — Claude(or Any Other AI Agent) Reads Transcript
 
@@ -173,7 +173,7 @@ Honor requested moments and timing. For automatic picks, rank candidates using t
 
 For gaming, set the top-level `content_type` to `gaming`. For each segment, put a concise, accurate opening title in `hook_line1`. Inspect full-resolution frames from that segment and add `gaming` with `gameplay` and `facecam` rectangles in original source pixels (`{ "x": ..., "y": ..., "w": ..., "h": ... }`). Measure the webcam panel bounds, excluding borders and overlays. Set `facecam` to null when absent. Choose gameplay bounds that keep the action visible after a centered portrait crop. Recheck the framing at setup and payoff. Gaming uses its own title and white caption treatment.
 
-For other formats, choose a caption style for each clip from the Caption Style Reference below. Use the spoken payoff, delivery and screen layout to decide. Favor Numeral when a figure carries the story and Rise when a reveal or key phrase deserves emphasis. Give screen demos and dense explanations room to breathe. Honor an explicit style across every clip it applies to.
+For podcasts, default to Numeral with two- or three-word caption groups. Use Rise for emotional or motivational moments when the delivery calls for it. Keep the title short and readable in the black band. For other formats, choose a style from the Caption Style Reference based on delivery and layout. Honor an explicitly requested style.
 
 Use the requested platform. Treat “Reels” as Instagram and “YouTube Shorts” as YouTube. Infer a destination when the brief or clip contains a platform-specific cue, such as a request to stitch on TikTok. Use `all` for an unspecified destination with no such cue or a general cross-platform request. For an explicit subset, export each named target in step 10. Report selected timecodes, hooks, styles and platform briefly and continue. If the user asked to review first, present the picks here and apply their feedback before rendering.
 
@@ -328,6 +328,7 @@ or re-exported before delivery.
 | **clean** | Inter Bold | Minimal fade-in, white + shadow | Professional, calm, interviews |
 | **numeral** | Display digits | Rolling digits | Statistics, dates, prices and comparisons |
 | **rise** | Display lettering | Staggered letter lift | Storytelling, reveals and emphatic phrases |
+| **studio** | Inter Bold | Sentence case, dark rounded background, amber active word | Podcasts and interviews |
 
 Load `references/caption-styles.md` for detailed visual specs and spring configs.
 

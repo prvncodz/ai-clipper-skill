@@ -24,11 +24,12 @@ export const CropKeyframeSchema = z.object({
 
 export type CropKeyframe = z.infer<typeof CropKeyframeSchema>;
 
-export const CaptionStyle = z.enum(["bold", "bounce", "clean", "numeral", "rise"]);
+export const CaptionStyle = z.enum(["bold", "bounce", "clean", "numeral", "rise", "studio"]);
 export type CaptionStyleType = z.infer<typeof CaptionStyle>;
 
 export const ShortVideoPropsSchema = z.object({
   gaming: z.object({ gameplay: CropSchema, facecam: CropSchema.nullable() }).optional(),
+  podcast: z.boolean().optional(),
   clipSrc: z.string(),
   sourceWidth: z.number(),
   sourceHeight: z.number(),
@@ -38,7 +39,6 @@ export const ShortVideoPropsSchema = z.object({
   captionStyle: CaptionStyle,
   hookLine1: z.string().optional().default(""),
   hookLine2: z.string().optional().default(""),
-  showProgressBar: z.boolean().optional().default(true),
   durationInSeconds: z.number(),
 });
 

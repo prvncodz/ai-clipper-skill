@@ -10,7 +10,7 @@ function groupWords(captions: Caption[]) {
     if (!word.text.trim()) continue;
     const page = pages[pages.length - 1];
     const previous = page?.[page.length - 1];
-    if (page && previous && page.length < 4 &&
+    if (page && previous && page.length < 3 &&
         page.map(w => w.text.trim()).join(" ").length + word.text.trim().length < 24 &&
         word.startMs - previous.endMs <= 350 && !/[.!?]$/.test(previous.text.trim())) {
       page.push(word);
@@ -30,7 +30,11 @@ function emphasis(page: Caption[], style: Style) {
     word.text.trim().length > best.text.trim().length ? word : best);
 }
 
-export function EmphasisCaptions({ captions, style }: { captions: Caption[]; style: Style }) {
+export function EmphasisCaptions({ captions, style, podcast = false }: {
+  captions: Caption[];
+  style: Style;
+  podcast?: boolean;
+}) {
   const frame = useCurrentFrame();
   const { fps, width } = useVideoConfig();
   const now = frame * 1000 / fps;
@@ -44,6 +48,31 @@ export function EmphasisCaptions({ captions, style }: { captions: Caption[]; sty
   const start = word?.startMs ?? end;
   const duration = Math.max(1, end - start);
   const age = now - start;
+  if (podcast) {
+    return (
+      <div style={{
+        position: "absolute", top: 1270, left: 72, right: 72, height: 116,
+        display: "flex", alignItems: "center", justifyContent: "center", gap: "0.23em",
+        fontFamily: "Montserrat, sans-serif", fontWeight: 700,
+        fontSize: Math.min(83, 1280 / page.map(token => token.text.trim()).join(" ").length),
+        lineHeight: 1.15, whiteSpace: "nowrap", color: "white",
+        WebkitTextStroke: "9px #000", paintOrder: "stroke fill",
+        textShadow: "0 6px 9px #000",
+      }}>
+        {page.map((token, index) => {
+          const active = now >= token.startMs && now < token.endMs;
+          const emphasized = token === word && now >= token.startMs;
+          const progress = Math.min(1, Math.max(0, (now - token.startMs) / 175));
+          const motion = emphasized ? Math.sin(progress * Math.PI) : 0;
+          return <span key={index} style={{
+            color: active || emphasized ? "#fff02d" : undefined,
+            transform: style === "rise" ? `translateY(${-12 * motion}px)` : `scale(${1 + 0.1 * motion})`,
+          }}>{token.text.trim()}</span>;
+        })}
+      </div>
+    );
+  }
+
   const intro = Math.min(duration * 0.48, style === "numeral" ? 733 : 400);
   const exit = Math.min(duration * 0.18, 267);
   const leaving = Math.max(0, 1 - (end - now) / exit);
