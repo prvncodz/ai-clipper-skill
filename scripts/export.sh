@@ -5,7 +5,7 @@ set -euo pipefail
 
 INPUT_DIR=""
 PLATFORM="all"
-OUTPUT_DIR="./shorts"
+OUTPUT_DIR="$HOME/Videos/shorts"
 FORCE="false"
 
 while [[ $# -gt 0 ]]; do

@@ -33,13 +33,13 @@ if [ -z "$SHORTS_ROOT" ]; then
 fi
 ```
 
-Create a fresh run directory so prior clips cannot enter this export. Reuse the resolved paths for all ten steps. Set OUTPUT_DIR to the requested destination or ./shorts by default.
+Create a fresh run directory so prior clips cannot enter this export. Reuse the resolved paths for all ten steps. Use the requested output directory or default to `~/Videos/shorts`.
 
 ```bash
 SHORTS_TMP_BASE="${SHORTS_TMP:-/tmp/claude-shorts}"
 mkdir -p "$SHORTS_TMP_BASE"
 SHORTS_TMP=$(mktemp -d "$SHORTS_TMP_BASE/run.XXXXXXXX")
-OUTPUT_DIR="${OUTPUT_DIR:-./shorts}"
+OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Videos/shorts}"
 mkdir -p "$SHORTS_TMP/clips"
 ```
 
@@ -295,11 +295,11 @@ With NVENC GPU: `h264_nvenc -preset p5 -tune hq` for 5-10x faster encoding.
 Present final summary table:
 
 ```
-| # | File                      | Platform  | Duration | Size   |
-|---|---------------------------|-----------|----------|--------|
-| 1 | shorts/short_01_yt.mp4    | YouTube   | 39s      | 12.3MB |
-| 1 | shorts/short_01_tt.mp4    | TikTok    | 39s      | 8.7MB  |
-| 1 | shorts/short_01_ig.mp4    | Instagram | 39s      | 7.1MB  |
+| # | File                          | Platform  | Duration | Size   |
+|---|-------------------------------|-----------|----------|--------|
+| 1 | ~/Videos/shorts/short_01_yt.mp4 | YouTube   | 39s      | 12.3MB |
+| 1 | ~/Videos/shorts/short_01_tt.mp4 | TikTok    | 39s      | 8.7MB  |
+| 1 | ~/Videos/shorts/short_01_ig.mp4 | Instagram | 39s      | 7.1MB  |
 ```
 
 **Post-export validation:** Run validation on all exported files:

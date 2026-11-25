@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-labelledby="title">
+  <title id="title">Clipex</title>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#10111f"/>
+      <stop offset="1" stop-color="#251a3e"/>
+    </linearGradient>
+    <linearGradient id="frame" x2="1" y2="1">
+      <stop stop-color="#b6a4ff"/>
+      <stop offset="1" stop-color="#7857ec"/>
+    </linearGradient>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M30 0H0V30" fill="none" stroke="#b4a3ef" stroke-opacity=".13"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="340" rx="24" fill="url(#background)"/>
+  <rect x="650" y="25" width="522" height="290" rx="16" fill="url(#grid)"/>
+  <rect x="1" y="1" width="1198" height="338" rx="23" fill="none" stroke="#9d89db" stroke-opacity=".35"/>
+  <path d="M114 102h54m-54 136h54" stroke="#b6a4ff" stroke-width="3" stroke-linecap="round"/>
+  <text x="108" y="208" fill="#f8f5ff" font-family="DejaVu Sans, Arial, sans-serif" font-size="108" font-weight="700" letter-spacing="-4">Clipex</text>
+  <rect x="713" y="103" width="364" height="134" rx="18" fill="#201a36" stroke="#6a5a98" stroke-width="2"/>
+  <path d="M736 129h318m-318 81h318M754 117v12m30-12v12m30-12v12m162-12v12m30-12v12m30-12v12M754 210v13m30-13v13m30-13v13m162-13v13m30-13v13m30-13v13"
+        fill="none" stroke="#6a5a98" stroke-width="2" stroke-linecap="round"/>
+  <rect x="829" y="61" width="132" height="218" rx="17" fill="#191329" stroke="url(#frame)" stroke-width="4"/>
+  <path d="m878 133 40 25-40 25z" fill="#d3f87a" stroke="#d3f87a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M860 223h70m-58 16h46" stroke="#e5dcff" stroke-width="5" stroke-linecap="round"/>
+</svg>

@@ -5,7 +5,7 @@
 set -euo pipefail
 
 INPUT="${1:-}"
-OUTPUT_DIR="${2:-./shorts}"
+OUTPUT_DIR="${2:-$HOME/Videos/shorts}"
 
 if [ -z "$INPUT" ]; then
     echo '{"pass":false,"error":"Usage: preflight.sh <input_file> [output_dir]"}'
@@ -29,7 +29,7 @@ fi
 
 # Check output directory
 if [ -d "$OUTPUT_DIR" ]; then
-    EXISTING=$(find "$OUTPUT_DIR" -name "short_*.mp4" 2>/dev/null | wc -l)
+    EXISTING=$(find "$OUTPUT_DIR" -maxdepth 1 -name "short_*.mp4" 2>/dev/null | wc -l)
     if [ "$EXISTING" -gt 0 ]; then
         WARNINGS+=("Output directory has $EXISTING existing short_*.mp4 files")
     fi

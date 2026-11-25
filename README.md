@@ -1,241 +1,98 @@
-# claude-shorts
+# Clipex
 
-![claude-shorts header](claude-shorts-header.jpeg)
+![Clipex wordmark and vertical video illustration](clipex-header.svg)
 
-Automatic longform-to-shortform video creator powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Extracts viral-ready vertical clips from long videos using Claude as the intelligent orchestrator with Remotion-rendered premium animated captions.
+Clipex turns a local video into captioned vertical clips for YouTube Shorts, TikTok, and Instagram Reels. The `shorts` skill runs in Claude Code or Codex. The agent picks highlights or uses your timecodes, then runs the local transcription, rendering, and export tools.
 
-## How It Works
+## Install Clipex
 
-Claude Code runs the existing 10-step pipeline:
+Use Bash on Linux or in [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install) on Windows. Install Python 3.10+ with `venv`, Node.js 18+ with npm, FFmpeg with `ffprobe`, `jq`, `bc`, and either Claude Code or Codex. The Claude Code installer also needs `rsync`.
 
-1. **Preflight** - Validates input video, checks disk space, detects GPU
-2. **Transcribe** - GPU-accelerated transcription with word-level timestamps (faster-whisper)
-3. **Detect Content** - Auto-classifies: talking-head, screen recording, or podcast
-4. **Analyze** - Claude reads the full transcript and scores 8-12 candidate segments
-5. **Present** - Shows candidates in a formatted table with scores, hooks, and rationale
-6. **Select** - The model chooses self-contained segments, caption styles and an export platform using your preferences when supplied
-7. **Snap Boundaries** - Aligns cut points to word boundaries, sentence endings, and audio silences
-8. **Prepare** - Extracts clips (FFmpeg stream copy) and computes reframe coordinates
-9. **Render** - Remotion renders 1080x1920 vertical video with animated captions
-10. **Export** - Platform-optimized encoding (YouTube Shorts, TikTok, Instagram Reels)
+Setup uses `~/.video-skill` if it exists. Otherwise, it creates or reuses `~/.shorts-skill`. Setup also installs dependencies under the skill's `remotion/` directory.
 
-## Demo
+### Codex
 
-> Demo video/GIF coming soon — showing the full pipeline from input to rendered short with Bold-style captions.
-
-## Features
-
-- **Claude-powered segment scoring** - 5-dimension rubric (hook strength, coherence, emotion, value density, payoff) with weighted scoring. No heuristic keyword matching - Claude understands narrative arcs.
-- **5 caption styles** - Bold (ALL CAPS, yellow highlights), Bounce (bouncy spring, rotating colors), Clean (minimal fade-in), Numeral (rolling digits), Rise (staggered letters)
-- **Cursor tracking** - For screen recordings, detects mouse cursor via frame differencing and smoothly pans the crop to follow it
-- **Audio-aware boundary snapping** - Never cuts mid-word or mid-sentence. Extends to natural sentence endings and silence points.
-- **Remotion rendering** - React-based single-pass rendering with spring animations, word-level karaoke highlighting, hook text overlays, and progress bars
-- **GPU acceleration** - CUDA for transcription, NVENC for export encoding (falls back to CPU gracefully)
-
-## Prerequisites
-
-- **FFmpeg** (system package)
-- **Python 3.10+**
-- **Node.js 18+**
-- **Claude Code** (CLI) / Codex
-- **NVIDIA GPU** recommended (for CUDA transcription + NVENC encoding)/ CPU fallback will take more time but possible
-
-## Installation
+Clone the repo into your personal skills directory and run setup there.
 
 ```bash
-# Clone the repository
-git clone https://github.com/AgriciDaniel/claude-shorts.git
-cd claude-shorts
-
-# Install Python + Node.js dependencies
+mkdir -p "$HOME/.agents/skills"
+git clone https://github.com/prvncodz/ai-clipper-skill.git "$HOME/.agents/skills/shorts"
+cd "$HOME/.agents/skills/shorts"
 bash setup.sh
-
-# Install as a Claude Code skill
-bash install.sh
 ```
 
-### Windows
+If you already have the repo in that directory, run `bash setup.sh` there. Start a new Codex session and invoke `$shorts`.
 
-claude-shorts requires Unix tools (FFmpeg, bash). On Windows, use [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install):
+### Claude Code
+
+Copy the skill into Claude Code's skills directory, then install dependencies from that copy.
 
 ```bash
-# Inside WSL
-git clone https://github.com/AgriciDaniel/claude-shorts.git
-cd claude-shorts
-bash setup.sh
+git clone https://github.com/prvncodz/ai-clipper-skill.git clipex
+cd clipex
 bash install.sh
+cd "$HOME/.claude/skills/shorts"
+bash setup.sh
 ```
 
-### What `setup.sh` does
+Start Claude Code and invoke `/shorts`.
 
-- Creates a Python virtual environment at `~/.shorts-skill/` (or reuses `~/.video-skill/` if it exists)
-- Installs `faster-whisper`, `mediapipe`, `numpy`, `opencv-python`, and PyTorch (CUDA or CPU variant)
-- Runs `npm install` in the `remotion/` directory
-- Checks for system dependencies (FFmpeg, jq)
+## Make clips
 
-## Usage
+Pass the path to a local video in your prompt. Add a clip count, timecodes, a caption style, a destination platform, or an output directory as needed.
 
-In Claude Code, invoke the skill:
+In Codex, enter this prompt.
 
-```
-/shorts
+```text
+$shorts Take two clips from ~/Videos/interview.mp4 for YouTube Shorts. Use Studio captions.
 ```
 
-Pass a video path with the command. You can also specify the clips, caption style or platform you want. The model will:
+In Claude Code, use the slash command.
 
-1. Transcribe the video
-2. Present scored segment candidates
-3. Select clips, match a caption style to each one, and choose the target platform
-4. Render and export the final shorts
-
-### Example Interaction
-
-```
-You: /shorts ~/Videos/my-talk.mp4 for YouTube Shorts
-Claude: [Transcribes, detects content type, scores segments]
-
-| # | Time          | Dur  | Score | Hook                           |
-|---|---------------|------|-------|--------------------------------|
-| 1 | 04:22 - 05:01 | 39s  | 87    | "Nobody talks about this..."  |
-| 2 | 12:45 - 13:28 | 43s  | 82    | "Here's the exact framework." |
-| 3 | 08:11 - 08:52 | 41s  | 79    | "I tested this for 6 months." |
-
-Claude: I selected 1 for its standalone claim and 3 for its six-month experiment. I’ll use Bold for the claim and Numeral for the experiment, then export both for YouTube Shorts.
-
-Claude: [Snaps boundaries, extracts clips, renders, exports]
-Output: shorts/short_01_yt.mp4, shorts/short_03_yt.mp4
+```text
+/shorts ~/Videos/gameplay.mp4 Find up to three gameplay highlights for TikTok. Save them to ~/Videos/gameplay-shorts.
 ```
 
-## Project Structure
+To use a specific moment, include its start and end times, such as `04:22 to 05:01`. To approve the picks before rendering, add "show me the picks first." By default, the agent selects the clips and continues through export.
 
-```
-claude-shorts/
-├── SKILL.md                           # 10-step clip pipeline (Claude Code skill)
-├── CLAUDE.md                          # Project-level instructions
-├── install.sh                         # Install to ~/.claude/skills/
-├── setup.sh                           # Python + Node dependency installer
-│
-├── scripts/
-│   ├── transcribe.py                  # faster-whisper GPU transcription
-│   ├── detect_content.py              # MediaPipe content type classifier
-│   ├── compute_reframe.py             # Face tracking + cursor tracking + crop
-│   ├── snap_boundaries.py             # Audio-aware boundary snapping
-│   ├── preflight.sh                   # Input validation + disk space check
-│   ├── detect_gpu.sh                  # NVIDIA NVENC detection
-│   └── export.sh                      # Platform-specific FFmpeg encoding
-│
-├── remotion/
-│   ├── package.json                   # Remotion v4 + React 19 + Zod
-│   ├── render.mjs                     # Bundle-once-render-many orchestrator
-│   ├── remotion.config.ts
-│   └── src/
-│       ├── Root.tsx                   # Composition registry
-│       ├── ShortVideo.tsx             # Main composition
-│       ├── types.ts                   # Zod schemas for props
-│       ├── components/
-│       │   ├── VideoFrame.tsx         # Reframed video with animated crop pan
-│       │   ├── Captions.tsx           # Style dispatcher
-│       │   ├── BoldCaptions.tsx        # Bold ALL CAPS, pop-in spring
-│       │   ├── BounceCaptions.tsx     # Bouncy scale, bright colors
-│       │   ├── CleanCaptions.tsx      # Minimal fade-in
-│       │   ├── HookOverlay.tsx        # First 3.5s hook text
-│       │   └── ProgressBar.tsx        # Bottom progress indicator
-│       ├── hooks/
-│       │   └── useCaptionPages.ts     # @remotion/captions TikTok-style pages
-│       └── styles/
-│           ├── fonts.ts               # @font-face declarations
-│           └── theme.ts               # Color palettes per style
-│
-└── references/
-    ├── scoring-rubric.md              # 5-dimension scoring criteria
-    ├── caption-styles.md              # Visual specs + spring configs
-    ├── platform-specs.md              # YouTube/TikTok/Instagram encoding
-    └── remotion-patterns.md           # Remotion best practices
+## How Clipex edits your video
+
+Clipex transcribes the source with word timestamps and samples frames to choose a layout. For speech-led videos, the agent scores highlights by hook strength, standalone coherence, emotional intensity, value density, and payoff. It defaults to up to three distinct clips that score at least 60. For gameplay, the agent reviews sampled frames and audio cues, then checks the action, setup, and payoff before picking clips. See the [scoring rubric](references/scoring-rubric.md).
+
+Talking-head clips use a face-tracked crop. Screen recordings use a framed layout, and podcasts put the speaker in a wider window with space for a title. Gameplay can fill the vertical frame or place a webcam panel above the action. The gameplay layout uses its own opening title and white captions.
+
+The agent can choose Bold, Bounce, Clean, Numeral, Rise, or Studio for other layouts. Studio uses sentence case with an amber active word on a dark background. Podcasts default to Numeral and may use Rise for emotional or motivational clips. You can request a style in your prompt. See the [caption style reference](SKILL.md#caption-style-reference).
+
+Clipex aligns speech cuts with word boundaries and nearby pauses. The gaming workflow preserves the selected visual timing. Remotion renders the chosen cuts at 1080 × 1920, and FFmpeg encodes them for the target platform. See the [full skill workflow](SKILL.md).
+
+## Find and check your exports
+
+Clipex writes exports to `~/Videos/shorts` by default. If that directory already contains `short_*.mp4` files, the skill uses a fresh subdirectory and reports the final paths. You can also name a destination in your prompt.
+
+If no platform is requested or inferred, Clipex exports all three variants. The filename suffix identifies each variant.
+
+| Platform | Example file |
+| --- | --- |
+| YouTube Shorts | `short_01_yt.mp4` |
+| TikTok | `short_01_tt.mp4` |
+| Instagram Reels | `short_01_ig.mp4` |
+
+The skill runs a validation pass that checks playback, dimensions, the audio track, codec, duration, and file size. It reports any failures with the output paths. See the [export script](scripts/export.sh) for the encoding settings.
+
+## Choose a transcription backend
+
+The default backend is faster-whisper. NVIDIA CUDA can accelerate transcription, and CPU transcription is available. The skill uses the `small` model for CPU-only interviews and podcasts and the script defaults to `large-v3` for other runs. Ask for a specific model in your prompt to override that choice.
+
+For experimental Intel GPU transcription, ask for OpenVINO. If your system has a `shorts-openvino` launcher, the agent can use it. You can also run the transcription script from a separate Python environment with OpenVINO GenAI and a local OpenVINO Whisper model. Activate that environment and run this command from the skill directory.
+
+```bash
+python3 scripts/transcribe.py "$HOME/Videos/interview.mp4" \
+    --backend openvino --model /path/to/openvino-whisper \
+    --output /tmp/clipex-transcript.json
 ```
 
-## Caption Styles
+Check names, numbers, and word timing against the source before exporting clips from the experimental backend.
 
-| Style | Font | Animation | Best For |
-| ------- | ------ | ----------- | ---------- |
-| **Bold** | Montserrat Bold | Pop-in spring, yellow active word | Business, education |
-| **Bounce** | Bangers | Bouncy scale 70-120-100%, rotating colors | Entertainment, energy |
-| **Clean** | Inter Bold | Fade-in opacity, white + shadow | Professional, interviews |
-| **Numeral** | Montserrat with oversized emphasis | Rolling digits | Statistics, dates, prices |
-| **Rise** | Montserrat with oversized emphasis | Letters rise in sequence | Stories, reveals |
+## Credits and license
 
-Numeral and Rise adapt the animation styles from [Subtle](https://github.com/0xpratzyy/subtle).
-
-## Platform Export Specs
-
-| Platform | Codec | Bitrate | Audio |
-| ---------- | ------- | --------- | ------- |
-| **YouTube Shorts** | H.264 High 4.2 | 12 Mbps | AAC 192k |
-| **TikTok** | H.264 | CRF 18, -preset slow | AAC 128k |
-| **Instagram Reels** | H.264 High 4.2 | 4.5 Mbps (max 5000k) | AAC 128k |
-
-## Content Type Strategies
-
-| Content Type | Reframe Strategy | Zoom |
-| -------------- | ----------------- | ------ |
-| **Talking-head** | Face-tracked center crop (MediaPipe) | 9:16 exact |
-| **Screen recording** | Cursor-tracked pan with moderate zoom | 55% of source width |
-| **Podcast** | Dominant speaker tracking | 9:16 exact |
-
-## Dependencies
-
-### Python (installed via `setup.sh`)
-
-- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) - GPU-accelerated Whisper
-- [mediapipe](https://mediapipe.dev/) - Face detection for content classification + reframing
-- [numpy](https://numpy.org/) - Array operations for cursor tracking smoothing
-- [opencv-python](https://opencv.org/) - Frame differencing for cursor detection
-
-### Node.js (installed via `setup.sh`)
-
-- [Remotion v4](https://remotion.dev/) - React-based video rendering
-- [@remotion/captions](https://remotion.dev/docs/captions) - TikTok-style word-level captions
-- [React 19](https://react.dev/) - Component framework
-- [Zod](https://zod.dev/) - Runtime type validation for props
-
-### Fonts
-
-Caption fonts are bundled from Google Fonts under the [SIL Open Font License](remotion/public/fonts/OFL.txt):
-
-- Montserrat Bold (Bold style)
-- Bangers Regular (Bounce style)
-- Inter Bold (Clean style)
-
-### System
-
-- [FFmpeg](https://ffmpeg.org/) - Audio extraction, segment cutting, export encoding
-- [jq](https://jqlang.github.io/jq/) - JSON processing in shell scripts
-
-## How Segment Scoring Works
-
-Claude scores each candidate on 5 weighted dimensions:
-
-| Dimension | Weight | What Claude Looks For |
-| ----------- | -------- | ---------------------- |
-| Hook Strength | 0.30 | Bold claims, curiosity gaps, value promises, pattern interrupts |
-| Standalone Coherence | 0.25 | Makes complete sense without any context from the rest of the video |
-| Emotional Intensity | 0.20 | Strong opinions, surprise reveals, humor, passion |
-| Value Density | 0.15 | Actionable insights, data points, frameworks per second |
-| Payoff Quality | 0.10 | Satisfying conclusion - punchline, reveal, call-to-action |
-
-Final score = weighted sum, scale 0-100. Minimum threshold: 60.
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/AgriciDaniel/claude-shorts/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/AgriciDaniel/claude-shorts/discussions)
-
-## License
-
-[MIT](LICENSE)
-
----
-
-## Author
-
-Built by Agrici Daniel - AI Workflow Architect.
-Improved by Praveen Pradhan - Software Engineer.
+Built by Agrici Daniel and extended by Praveen Pradhan. The Numeral and Rise animations are adapted from [Subtle](https://github.com/0xpratzyy/subtle). Clipex is available under the [MIT license](LICENSE).
