@@ -30,7 +30,6 @@ export function GamingVideo({ layout, title, captions, ...source }: GamingProps)
   const pages = useCaptionPages(captions, 850);
   const page = pages.find(p => p.tokens.some(t => t.fromMs <= now && now < t.toMs));
   const showTitle = Boolean(title) && frame < fps * 2;
-  const text = showTitle ? title : page?.tokens.map(t => t.text.trim()).join(" ");
   const seam = layout.facecam ? Math.round(height / 3) : 0;
 
   return (
@@ -39,7 +38,7 @@ export function GamingVideo({ layout, title, captions, ...source }: GamingProps)
         width={width} height={seam} muted />}
       <Panel {...source} crop={layout.gameplay} top={seam}
         width={width} height={height - seam} muted={false} />
-      {text && <div style={{
+      {(showTitle || page) && <div style={{
         position: "absolute", left: "50%", top: seam || height * 0.19,
         transform: "translate(-50%, -50%)", textAlign: "center",
         width: "88%", boxSizing: "border-box", overflowWrap: "anywhere",
@@ -48,7 +47,17 @@ export function GamingVideo({ layout, title, captions, ...source }: GamingProps)
         fontSize: showTitle ? 64 : 42, fontWeight: 700, lineHeight: 1.12,
         color: showTitle ? "#121212" : "white",
         WebkitTextStroke: showTitle ? undefined : "5px #191919", paintOrder: "stroke fill",
-      }}>{text}</div>}
+      }}>
+        {showTitle ? title : page?.tokens.map((token, index) => {
+          const active = token.fromMs <= now && now < token.toMs;
+          return (
+            <span key={index} style={{ color: active ? "#FFD54A" : undefined }}>
+              {index > 0 && " "}
+              {token.text.trim()}
+            </span>
+          );
+        })}
+      </div>}
     </AbsoluteFill>
   );
 }
