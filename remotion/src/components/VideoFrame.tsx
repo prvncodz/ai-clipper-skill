@@ -1,5 +1,6 @@
 import { OffthreadVideo, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
 import type { Crop, CropKeyframe } from "../types";
+import { podcastVideoHeight, podcastVideoTop } from "../styles/podcastLayout";
 
 interface VideoFrameProps {
   clipSrc: string;
@@ -37,7 +38,7 @@ export const VideoFrame: React.FC<VideoFrameProps> = ({
 
   // Scale factor: how much to scale source so crop.w fills 1080px
   const outputWidth = 1080;
-  const outputHeight = podcast ? 1160 : 1920;
+  const outputHeight = podcast ? podcastVideoHeight : 1920;
   const scale = podcast
     ? Math.max(outputWidth / sourceWidth, outputHeight / sourceHeight)
     : outputWidth / crop.w;
@@ -66,7 +67,7 @@ export const VideoFrame: React.FC<VideoFrameProps> = ({
   // Auto-detect framed layout: video doesn't fill full output height.
   // Position in content zone (below 200px hook text area) for screen recordings.
   const hookZone = 200;
-  const topOffset = podcast ? 330 : scaledHeight < outputHeight ? hookZone : 0;
+  const topOffset = podcast ? podcastVideoTop : scaledHeight < outputHeight ? hookZone : 0;
 
   return (
     <div

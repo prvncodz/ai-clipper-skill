@@ -88,6 +88,7 @@ async function main() {
   // Bundle once
   const serveUrl = await bundle({
     entryPoint: path.resolve(__dirname, "src/index.ts"),
+    publicDir: path.resolve(__dirname, "public"),
   });
 
   const bundleTime = ((Date.now() - startBundle) / 1000).toFixed(1);

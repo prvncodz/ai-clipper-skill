@@ -1,7 +1,7 @@
 ---
 name: shorts
 description: >
-  Automatic longform-to-shortform video creator. Extracts viral-ready short clips from long videos using Claude/Codex as the orchestrator. Transcribes with faster-whisper (GPU), the model selects highlights and matches captions to each clip, Remotion renders Bold, Bounce, Clean, Numeral, or Rise captions, FFmpeg exports platform-optimized files (YouTube Shorts, TikTok, Instagram Reels). Use when user says "shorts", "short clips", "shortform", "extract clips", "tiktok from video", "reels from video", "vertical clips", or "create shorts".
+  Turn long videos into captioned vertical clips. Select highlights, transcribe with faster-whisper or OpenVINO, check captions against the source, and render with Remotion. Export YouTube Shorts and Instagram Reels by default, with TikTok on request. Use for shorts, short clips, shortform, reels, vertical clips, or highlights extracted from video.
 allowed-tools:
   - Bash
   - Read
@@ -65,7 +65,7 @@ Report to user: input duration, resolution, GPU status, estimated processing tim
 
 ### Step 2: TRANSCRIBE
 
-Transcribe with faster-whisper and keep word-level timestamps. Use `--model small` for interviews and podcasts on a CPU-only transcription setup. Honor an explicitly requested model. For other runs, use the script default.
+Keep word-level timestamps and honor an explicitly requested backend or model. For podcasts, prefer the local OpenVINO launcher when available. If the content type is unclear, sample frames as in Step 3 before choosing the backend. With faster-whisper, use `--model small` for CPU-only interviews and podcasts. For other faster-whisper runs, use the script default.
 Audio extraction is handled internally by transcribe.py:
 
 ```bash
@@ -77,9 +77,7 @@ python3 "$SHORTS_ROOT/scripts/transcribe.py" INPUT_FILE \
     --output $SHORTS_TMP/transcript.json
 ```
 
-When the user requests experimental Intel GPU transcription and the local
-`shorts-openvino` launcher is available, use it in place of the faster-whisper
-command:
+Use the local `shorts-openvino` launcher for the podcast default or when Intel GPU transcription is requested:
 
 ```bash
 shorts-openvino INPUT_FILE --output "$SHORTS_TMP/transcript.json"
@@ -88,8 +86,8 @@ shorts-openvino INPUT_FILE --output "$SHORTS_TMP/transcript.json"
 The launcher selects `--backend openvino` and a local OpenVINO Whisper model.
 To use a separate OpenVINO GenAI environment, run `scripts/transcribe.py` in
 that environment with `--backend openvino --model /path/to/openvino-whisper`.
-Review names, numbers, and word timing against the source before exporting
-clips from the experimental backend.
+If the automatic OpenVINO choice fails, fall back to faster-whisper and apply the same review. If the user explicitly chose OpenVINO, try the same backend on shorter excerpts when practical and report any unresolved failure.
+Every backend goes through the same caption review in Step 4.
 
 Output is dual-format JSON:
 
@@ -111,7 +109,7 @@ Inspect the contact sheet. Route visible gameplay to **gaming**, including foota
 
 - **talking-head**: Face-tracked center crop to 9:16
 - **screen**: Letterboxed framed layout (content centered, dark padding)
-- **podcast**: Face-centered video in a wider window with black space for the title and below the frame
+- **podcast**: Centered wide video box with a persistent title directly above it
 
 ### Step 4: ANALYZE — Claude(or Any Other AI Agent) Reads Transcript
 
@@ -150,20 +148,16 @@ For a typical long video, score 8-12 candidate segments (15-55 seconds each). Us
 For each candidate, identify:
 
 - Start/end timestamps (to the nearest second)
-- A suggested hook line (first 3 seconds of text overlay)
+- A suggested hook line for the text overlay
 - Brief rationale (1 sentence explaining why this segment works)
 
-**Transcript cleanup:** While analyzing, also produce cleaned captions for rendering.
-Read the `captions[]` array from transcript.json, then:
+**Caption review:** Treat all model output as a draft, including OpenVINO and small or free models. Keep `transcript.json` unchanged. Before rendering, check the captions for every selected cut against the source audio. Use trustworthy source subtitles or a short retranscription of the excerpt to cross-check unclear passages.
 
-1. Remove a filler only when its omission preserves meaning. Keep comparisons, approximations, names and figures intact.
-2. Fix obvious transcription errors based on surrounding context
-3. Consolidate incomplete sentence fragments where appropriate
-4. **Keep all timestamps unchanged** — only modify the `text` field
+1. Correct verified names, numbers, garbled words, and punctuation. Remove hallucinated words and fillers when the omission preserves meaning. Preserve qualifiers such as “about” and “or something,” comparisons, and units.
+2. Preserve good timestamps. Check for words that appear during silence, span multiple seconds, or jump ahead of the audio. Realign those words to verified source timing or retranscribe that stretch with a small amount of surrounding audio and translate the new timestamps back to source time.
+3. If words are still unclear, omit the uncertain caption or choose another highlight. Avoid guessing a name, number, or claim. Check the clip boundaries against the audio when the model timing looks unreliable.
 
-Write the cleaned transcript to `$SHORTS_TMP/transcript_cleaned.json` using the same
-JSON structure as transcript.json (both `segments` and `captions` arrays). The `captions`
-array should contain the cleaned text; copy `segments` as-is.
+Write `$SHORTS_TMP/transcript_cleaned.json` in the same dual format. Copy `segments[]` as-is and put the reviewed text and verified timing in `captions[]`. The renderer uses this file and keeps the original source audio.
 
 ### Step 5: SELECT HIGHLIGHTS
 
@@ -173,9 +167,9 @@ Honor requested moments and timing. For automatic picks, rank candidates using t
 
 For gaming, set the top-level `content_type` to `gaming`. For each segment, put a concise, accurate opening title in `hook_line1`. Inspect full-resolution frames from that segment and add `gaming` with `gameplay` and `facecam` rectangles in original source pixels (`{ "x": ..., "y": ..., "w": ..., "h": ... }`). Measure the webcam panel bounds, excluding borders and overlays. Set `facecam` to null when absent. Choose gameplay bounds that keep the action visible after a centered portrait crop. Recheck the framing at setup and payoff. Gaming uses its own title and white caption treatment.
 
-For podcasts, default to Numeral with two- or three-word caption groups. Use Rise for emotional or motivational moments when the delivery calls for it. Keep the title short and readable in the black band. For other formats, choose a style from the Caption Style Reference based on delivery and layout. Honor an explicitly requested style.
+For podcasts, set `content_type` to `podcast`. Write a short, catchy, accurate title for each clip in `hook_line1` and use `hook_line2` if the title needs a second line. Keep it readable directly above the centered video box, from the opening frame through the final frame. Default to Numeral with two- or three-word groups near the lower edge of the footage and a yellow active word. Use Rise for emotional or motivational delivery when it fits. For other formats, use the Caption Style Reference. Honor an explicitly requested style.
 
-Use the requested platform. Treat “Reels” as Instagram and “YouTube Shorts” as YouTube. Infer a destination when the brief or clip contains a platform-specific cue, such as a request to stitch on TikTok. Use `all` for an unspecified destination with no such cue or a general cross-platform request. For an explicit subset, export each named target in step 10. Report selected timecodes, hooks, styles and platform briefly and continue. If the user asked to review first, present the picks here and apply their feedback before rendering.
+Default to YouTube Shorts and Instagram Reels (`youtube,instagram`). Treat “Reels” as Instagram and honor any explicit platform selection. Include TikTok only when requested, including when the user asks for all three. A YouTube source link identifies the input and leaves the export default in effect. Report selected timecodes, titles, styles and platforms briefly and continue. If the user asked to review the picks before rendering, present them here and apply their feedback.
 
 Write approved segments to:
 
@@ -193,7 +187,7 @@ cat > $SHORTS_TMP/approved_segments.json << 'EOF'
       "style": "rise"
     }
   ],
-  "platform": "all",
+  "platform": "youtube,instagram",
   "content_type": "talking-head"
 }
 EOF
@@ -226,10 +220,11 @@ Use `--no-silence` to skip silence detection (faster, word-boundary snapping onl
 Report to user: adjustment deltas per segment (e.g., "start +150ms, end +362ms").
 
 From this point forward, use `snapped_segments.json` instead of `approved_segments.json`.
+If a suggested boundary lands inside speech or leaves a long pause, check the source audio and correct the boundary in `snapped_segments.json`.
 
 ### Step 8: PREPARE — Extract Clips + Compute Reframe
 
-For gaming, extract each clip with accurate frame timing using `ffmpeg -y -ss START -i INPUT_FILE -t DURATION -map 0:v:0 -map '0:a:0?' -c:v libx264 -preset fast -crf 18 -c:a aac OUTPUT_CLIP`. Use end minus start for DURATION and the same numbered filenames as below.
+For gaming and podcasts, extract each clip with accurate frame timing using `ffmpeg -y -ss START -i INPUT_FILE -t DURATION -map 0:v:0 -map '0:a:0?' -c:v libx264 -preset fast -crf 18 -c:a aac OUTPUT_CLIP`. Use end minus start for DURATION and the same numbered filenames as below. Accurate cuts keep podcast speech and captions aligned at the clip start.
 
 For other formats, extract each snapped segment via FFmpeg stream copy (near-instant, lossless).
 Use the snapped start/end times from `$SHORTS_TMP/snapped_segments.json`:
@@ -247,6 +242,8 @@ python3 "$SHORTS_ROOT/scripts/compute_reframe.py" \
     --content-type CONTENT_TYPE \
     --output $SHORTS_TMP/reframe.json
 ```
+
+For podcasts, check close-ups and two-person shots near the start, middle, and end. Use the speaker-centered crop for solo shots and center the wider composition when both people share the frame. Review `reframe.json` against the selected frames and adjust the crop center if the automatic framing loses a speaker.
 
 Report to user: clips extracted, content type per clip, reframe strategy.
 
@@ -274,7 +271,7 @@ Report progress to user as each segment renders.
 
 ### Step 10: EXPORT — Platform-Optimized Encoding
 
-Export rendered shorts with the selected platform value. Use the output directory from preflight for both export and validation:
+Export rendered shorts with the selected platform value. Omit `--platform` to use the YouTube Shorts and Instagram Reels default, or pass one or more comma-separated platform names. Use the output directory from preflight for both export and validation:
 
 ```bash
 bash "$SHORTS_ROOT/scripts/export.sh" \
@@ -288,7 +285,7 @@ Platform encoding specs:
 - **YouTube Shorts**: H.264 High 4.2, 12 Mbps, AAC 192k
 - **TikTok**: H.264, CRF 18, -preset slow, AAC 128k
 - **Instagram Reels**: H.264 High 4.2, 4.5 Mbps maxrate 5000k, AAC 128k
-- **All**: Exports all three variants per clip
+- **All**: Use `--platform all` when all three variants are explicitly requested
 
 With NVENC GPU: `h264_nvenc -preset p5 -tune hq` for 5-10x faster encoding.
 
@@ -298,7 +295,6 @@ Present final summary table:
 | # | File                          | Platform  | Duration | Size   |
 |---|-------------------------------|-----------|----------|--------|
 | 1 | ~/Videos/shorts/short_01_yt.mp4 | YouTube   | 39s      | 12.3MB |
-| 1 | ~/Videos/shorts/short_01_tt.mp4 | TikTok    | 39s      | 8.7MB  |
 | 1 | ~/Videos/shorts/short_01_ig.mp4 | Instagram | 39s      | 7.1MB  |
 ```
 
@@ -312,6 +308,8 @@ Checks: file is playable, resolution is 1080x1920, audio track exists and isn't 
 file size is within platform limits, video codec is H.264, duration is 3-90 seconds.
 If any file fails, report the issues to the user. Failed files should be re-rendered
 or re-exported before delivery.
+
+For podcasts, check the rendered opening, middle, and closing frames for the title, centering, and readable captions. If the user requested preview approval, share the validated clips and ask whether the layout should be kept or revised before making further changes to the podcast defaults.
 
 ## Important Rules
 
@@ -338,14 +336,14 @@ Apply defaults automatically and honor user-specified settings.
 
 | Parameter | Default | Flag/Var | When to change |
 | ----------- | --------- | ---------- | ---------------- |
-| Whisper model | `small` for CPU interviews and podcasts, `large-v3` otherwise | `--model MODEL` | Override for a specific speed or accuracy requirement |
+| Whisper model | Local OpenVINO for podcasts when available, faster-whisper `small` for CPU interviews and podcasts, `large-v3` otherwise | `--model MODEL` | Override for a specific speed or accuracy requirement |
 | Screen zoom | `0.55` | `--zoom 0.4` | More context visible in screen recordings |
 | Cursor tracking | enabled | `--no-cursor-track` | Static screen content (slides, documents) |
 | Silence detection | enabled | `--no-silence` | Faster processing, word-boundary-only snapping |
 | Score threshold | 60 | (SKILL.md instruction) | Override when requested |
 | Segment duration | 15-55s | (SKILL.md instruction) | Adjust per platform (TikTok prefers 21-34s) |
 | Temp directory | `/tmp/claude-shorts/` | `SHORTS_TMP` env var | Systems with limited /tmp space |
-| Export platform | `all` | `--platform youtube` | Single-platform targeting |
+| Export platform | `youtube,instagram` | `--platform youtube` or a comma-separated list | Select specific platforms |
 
 ## Error Recovery
 

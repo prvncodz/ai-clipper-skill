@@ -2,7 +2,7 @@
 
 ![Clipex wordmark and vertical video illustration](clipex-header.svg)
 
-Clipex turns a local video into captioned vertical clips for YouTube Shorts, TikTok, and Instagram Reels. The `shorts` skill runs in Claude Code or Codex. The agent picks highlights or uses your timecodes, then runs the local transcription, rendering, and export tools.
+Clipex is an extended fork of claude-shorts by Agrici Daniel. turns a local video into captioned vertical clips for YouTube Shorts, TikTok, and Instagram Reels. The `shorts` skill runs in Claude Code or Codex. The agent picks highlights or uses your timecodes, then runs the local transcription, rendering, and export tools.
 
 ## Install Clipex
 
@@ -69,7 +69,7 @@ Clipex aligns speech cuts with word boundaries and nearby pauses. The gaming wor
 
 Clipex writes exports to `~/Videos/shorts` by default. If that directory already contains `short_*.mp4` files, the skill uses a fresh subdirectory and reports the final paths. You can also name a destination in your prompt.
 
-If no platform is requested or inferred, Clipex exports all three variants. The filename suffix identifies each variant.
+Clipex exports YouTube Shorts and Instagram Reels by default. Ask for TikTok if you want a TikTok export. The filename suffix identifies each variant.
 
 | Platform | Example file |
 | --- | --- |
@@ -81,7 +81,7 @@ The skill runs a validation pass that checks playback, dimensions, the audio tra
 
 ## Choose a transcription backend
 
-The default backend is faster-whisper. NVIDIA CUDA can accelerate transcription, and CPU transcription is available. The skill uses the `small` model for CPU-only interviews and podcasts and the script defaults to `large-v3` for other runs. Ask for a specific model in your prompt to override that choice.
+The skill prefers local OpenVINO for podcasts when the launcher is available. Other runs use faster-whisper, which can run on NVIDIA CUDA or CPU. The skill uses `small` for CPU-only interviews and podcasts with faster-whisper. The script defaults to `large-v3` for other runs. Ask for a specific model to override these defaults.
 
 For experimental Intel GPU transcription, ask for OpenVINO. If your system has a `shorts-openvino` launcher, the agent can use it. You can also run the transcription script from a separate Python environment with OpenVINO GenAI and a local OpenVINO Whisper model. Activate that environment and run this command from the skill directory.
 

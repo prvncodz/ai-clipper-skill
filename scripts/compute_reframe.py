@@ -4,7 +4,7 @@
 Supports these reframing strategies based on content type:
 - talking-head: Face-tracked center crop (follows the speaker's face)
 - screen: Cursor-tracked pan with moderate zoom (follows mouse cursor)
-- podcast: Center crop or dominant-speaker tracking
+- podcast: Center group shots and frame solo speakers around the detected face
 - gaming: Source dimensions for the selected gameplay and facecam regions
 
 Usage:
@@ -55,7 +55,7 @@ def get_video_info(path):
     return w, h, fps, duration
 
 
-def compute_face_track(clip_path, src_w, src_h, num_samples=5):
+def compute_face_track(clip_path, src_w, src_h, num_samples=5, *, detect_group_shots=False):
     """Track face positions across sampled frames using MediaPipe."""
     import cv2
     import mediapipe as mp
@@ -96,11 +96,14 @@ def compute_face_track(clip_path, src_w, src_h, num_samples=5):
             bbox = best.location_data.relative_bounding_box
             cx = bbox.xmin + bbox.width / 2
             cy = bbox.ymin + bbox.height / 2
-            face_positions.append({
+            position = {
                 "t": round(ts, 2),
                 "x_center": round(cx, 4),
                 "y_center": round(cy, 4),
-            })
+            }
+            if detect_group_shots and len(results.detections) > 1:
+                position["group_shot"] = True
+            face_positions.append(position)
 
         os.unlink(frame_path)
 
@@ -389,9 +392,13 @@ def main():
                     strategy = "framed"
             face_positions = []
         else:  # podcast
-            face_positions = compute_face_track(clip_path, src_w, src_h)
-            crop = compute_crop_face_track(src_w, src_h, face_positions)
-            strategy = "face-track"
+            face_positions = compute_face_track(clip_path, src_w, src_h, detect_group_shots=True)
+            if any(position.get("group_shot") for position in face_positions):
+                crop = compute_crop_center(src_w, src_h)
+                strategy = "centered group"
+            else:
+                crop = compute_crop_face_track(src_w, src_h, face_positions)
+                strategy = "face-track"
             crop_keyframes = []
 
         entry = {

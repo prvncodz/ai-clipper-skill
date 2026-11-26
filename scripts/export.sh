@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Platform-specific FFmpeg encoding for exported shorts
-# Usage: bash scripts/export.sh --input-dir DIR --platform PLATFORM --output-dir DIR
+# Usage: bash scripts/export.sh --input-dir DIR [--platform youtube,instagram] [--output-dir DIR]
 set -euo pipefail
 
 INPUT_DIR=""
-PLATFORM="all"
+PLATFORM="youtube,instagram"
 OUTPUT_DIR="$HOME/Videos/shorts"
 FORCE="false"
 
@@ -19,12 +19,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_DIR" ]; then
-    echo '{"error":"Usage: export.sh --input-dir DIR [--platform youtube|tiktok|instagram|all] [--output-dir DIR]"}'
+    echo '{"error":"Usage: export.sh --input-dir DIR [--platform youtube,instagram or all] [--output-dir DIR]"}'
     exit 1
 fi
 
 if [ ! -d "$INPUT_DIR" ]; then
     echo "{\"error\":\"Input directory not found: $INPUT_DIR\"}"
+    exit 1
+fi
+
+if [ "$PLATFORM" = "all" ]; then
+    platforms=(youtube tiktok instagram)
+elif [[ "$PLATFORM" =~ ^(youtube|tiktok|instagram)(,(youtube|tiktok|instagram))*$ ]]; then
+    IFS=, read -r -a platforms <<< "$PLATFORM"
+else
+    printf 'Unknown platform selection: %s\n' "$PLATFORM" >&2
     exit 1
 fi
 
@@ -117,19 +126,11 @@ for input_file in "$INPUT_DIR"/short_*.mp4; do
     base=$(basename "$input_file" .mp4)
     num="${base#short_}"
 
-    platforms=()
-    if [ "$PLATFORM" = "all" ]; then
-        platforms=("youtube" "tiktok" "instagram")
-    else
-        platforms=("$PLATFORM")
-    fi
-
     for plat in "${platforms[@]}"; do
         case "$plat" in
             youtube)  suffix="_yt"; encode_func="encode_youtube" ;;
             tiktok)   suffix="_tt"; encode_func="encode_tiktok" ;;
             instagram) suffix="_ig"; encode_func="encode_instagram" ;;
-            *) echo "Unknown platform: $plat" >&2; continue ;;
         esac
 
         output_file="$OUTPUT_DIR/short_${num}${suffix}.mp4"

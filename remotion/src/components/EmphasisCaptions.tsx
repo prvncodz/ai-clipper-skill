@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import type { Caption } from "../types";
+import { podcastVideoHeight, podcastVideoTop } from "../styles/podcastLayout";
 
 type Style = "numeral" | "rise";
 
@@ -51,7 +52,8 @@ export function EmphasisCaptions({ captions, style, podcast = false }: {
   if (podcast) {
     return (
       <div style={{
-        position: "absolute", top: 1270, left: 72, right: 72, height: 116,
+        position: "absolute", top: podcastVideoTop + podcastVideoHeight - 150,
+        left: 72, right: 72, height: 116,
         display: "flex", alignItems: "center", justifyContent: "center", gap: "0.23em",
         fontFamily: "Montserrat, sans-serif", fontWeight: 700,
         fontSize: Math.min(83, 1280 / page.map(token => token.text.trim()).join(" ").length),

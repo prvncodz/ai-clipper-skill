@@ -4,6 +4,7 @@ import { VideoFrame } from "./components/VideoFrame";
 import { Captions } from "./components/Captions";
 import { HookOverlay } from "./components/HookOverlay";
 import { fontFaceCSS } from "./styles/fonts";
+import { podcastVideoTop } from "./styles/podcastLayout";
 import type { ShortVideoProps } from "./types";
 
 export const ShortVideo: React.FC<ShortVideoProps> = ({
@@ -42,9 +43,8 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
       {/* Animated captions */}
       <Captions captions={captions} style={captionStyle} podcast={podcast} />
 
-      {/* Hook text overlay (first 3.5 seconds) */}
       {podcast ? (
-        <div style={{ position: "absolute", top: 0, left: 90, right: 90, height: 330,
+        <div style={{ position: "absolute", top: 0, left: 90, right: 90, height: podcastVideoTop,
           display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: 37,
           boxSizing: "border-box", color: "white", textAlign: "center", fontFamily: "Montserrat, sans-serif",
           fontWeight: 700, fontSize: 72, lineHeight: 1.08, textWrap: "balance" }}>
