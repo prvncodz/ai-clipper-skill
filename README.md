@@ -6,29 +6,39 @@ Clipex is an extended fork of claude-shorts by Agrici Daniel. turns a local vide
 
 ## Install Clipex
 
+Install the `shorts` skill for your agent.
+
+```bash
+npx skills add prvncodz/clipex
+```
+
+Select Claude Code or Codex when prompted. Then run `bash setup.sh` from the installed skill directory to install the video processing dependencies. Restart your agent and invoke `/shorts` in Claude Code or `$shorts` in Codex.
+
+### Manual installation
+
 Use Bash on Linux or in [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install) on Windows. Install Python 3.10+ with `venv`, Node.js 18+ with npm, FFmpeg with `ffprobe`, `jq`, `bc`, and either Claude Code or Codex. The Claude Code installer also needs `rsync`.
 
 Setup uses `~/.video-skill` if it exists. Otherwise, it creates or reuses `~/.shorts-skill`. Setup also installs dependencies under the skill's `remotion/` directory.
 
-### Codex
+#### Codex
 
 Clone the repo into your personal skills directory and run setup there.
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
-git clone https://github.com/prvncodz/ai-clipper-skill.git "$HOME/.agents/skills/shorts"
+git clone https://github.com/prvncodz/clipex.git "$HOME/.agents/skills/shorts"
 cd "$HOME/.agents/skills/shorts"
 bash setup.sh
 ```
 
 If you already have the repo in that directory, run `bash setup.sh` there. Start a new Codex session and invoke `$shorts`.
 
-### Claude Code
+#### Claude Code
 
 Copy the skill into Claude Code's skills directory, then install dependencies from that copy.
 
 ```bash
-git clone https://github.com/prvncodz/ai-clipper-skill.git clipex
+git clone https://github.com/prvncodz/clipex.git clipex
 cd clipex
 bash install.sh
 cd "$HOME/.claude/skills/shorts"
