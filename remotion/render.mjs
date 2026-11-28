@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * Bundle-once-render-many orchestrator for claude-shorts.
+ * Bundle-once-render-many orchestrator for Clipex.
  *
  * Bundles the Remotion project once, opens a shared Chrome instance,
  * then renders each approved segment sequentially.
  *
  * Usage:
  *   node render.mjs \
- *     --segments /tmp/claude-shorts/approved_segments.json \
- *     --reframe /tmp/claude-shorts/reframe.json \
- *     --captions /tmp/claude-shorts/transcript.json \
+ *     --segments /tmp/clipex/approved_segments.json \
+ *     --reframe /tmp/clipex/reframe.json \
+ *     --captions /tmp/clipex/transcript.json \
  *     --style bold \
- *     --clips-dir /tmp/claude-shorts/clips/ \
- *     --output-dir /tmp/claude-shorts/render/
+ *     --clips-dir /tmp/clipex/clips/ \
+ *     --output-dir /tmp/clipex/render/
  *
  * IMPORTANT: Uses selectComposition() before renderMedia() to resolve
  * calculateMetadata (dynamic duration per segment).
@@ -43,7 +43,7 @@ async function main() {
   const reframePath = args.reframe;
   const captionsPath = args.captions;
   const clipsDir = args["clips-dir"];
-  const outputDir = args["output-dir"] || "/tmp/claude-shorts/render/";
+  const outputDir = args["output-dir"] || "/tmp/clipex/render/";
 
   if (!segmentsPath || !reframePath || !captionsPath || !clipsDir) {
     console.error(JSON.stringify({

@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
-# Install claude-shorts skill to ~/.claude/skills/
+# Install shorts for Claude Code (default) or Codex.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$HOME/.claude/skills/shorts"
+case "${1:-claude}" in
+    claude) SKILL_DIR="$HOME/.claude/skills/shorts" ;;
+    codex) SKILL_DIR="$HOME/.agents/skills/shorts" ;;
+    *) echo "Usage: bash install.sh [claude|codex]" >&2; exit 1 ;;
+esac
+
+if [ "$(realpath -m "$SCRIPT_DIR")" = "$(realpath -m "$SKILL_DIR")" ]; then
+    echo "Already installed at $SKILL_DIR. Run bash setup.sh to update dependencies."
+    exit 0
+fi
 
 echo "=== Installing shorts skill ==="
 
@@ -14,7 +23,7 @@ mkdir -p "$SKILL_DIR/references"
 mkdir -p "$SKILL_DIR/remotion"
 
 # Copy SKILL.md (the skill definition)
-cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
+cp "$SCRIPT_DIR/SKILL.md" "$SCRIPT_DIR/setup.sh" "$SCRIPT_DIR/requirements.txt" "$SKILL_DIR/"
 
 # Copy scripts
 for f in "$SCRIPT_DIR"/scripts/*.sh "$SCRIPT_DIR"/scripts/*.py; do
@@ -43,5 +52,5 @@ find "$SKILL_DIR" -type f | sort | while read -r f; do
 done
 echo ""
 echo "Next steps:"
-echo "  1. Run 'bash setup.sh' to install dependencies (if not done)"
-echo "  2. Use /shorts in Claude Code to start the interactive pipeline"
+echo "  1. Run: cd \"$SKILL_DIR\" && bash setup.sh"
+echo '  2. Use /shorts in Claude Code or $shorts in Codex'

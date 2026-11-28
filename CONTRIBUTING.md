@@ -1,10 +1,10 @@
-# Contributing to claude-shorts
+# Contributing to Clipex
 
 Thanks for your interest in contributing! Here's how to get involved.
 
 ## Reporting Bugs
 
-Open a [GitHub Issue](https://github.com/AgriciDaniel/claude-shorts/issues) with:
+Open a [GitHub Issue](https://github.com/prvncodz/clipex/issues) with:
 
 - Your OS, Python version, Node.js version, and GPU info
 - The full error output (copy from terminal)
@@ -13,7 +13,7 @@ Open a [GitHub Issue](https://github.com/AgriciDaniel/claude-shorts/issues) with
 
 ## Suggesting Features
 
-Use [GitHub Discussions](https://github.com/AgriciDaniel/claude-shorts/discussions) for feature ideas and questions.
+Use [GitHub Discussions](https://github.com/prvncodz/clipex/discussions) for feature ideas and questions.
 
 ## Pull Requests
 
@@ -26,8 +26,8 @@ Use [GitHub Discussions](https://github.com/AgriciDaniel/claude-shorts/discussio
 ### Development Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-shorts.git
-cd claude-shorts
+git clone https://github.com/YOUR_USERNAME/clipex.git
+cd clipex
 bash setup.sh
 bash install.sh
 ```

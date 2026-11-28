@@ -8,7 +8,7 @@ Supports these reframing strategies based on content type:
 - gaming: Source dimensions for the selected gameplay and facecam regions
 
 Usage:
-    python3 compute_reframe.py --clips-dir /tmp/claude-shorts/clips/ \
+    python3 compute_reframe.py --clips-dir /tmp/clipex/clips/ \
         --content-type screen --output reframe.json
 
 Output (reframe.json):

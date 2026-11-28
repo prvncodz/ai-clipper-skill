@@ -2,11 +2,11 @@
 set -euo pipefail
 
 main() {
-    echo "Uninstalling claude-shorts..."
+    echo "Uninstalling Clipex..."
 
     rm -rf "${HOME}/.claude/skills/shorts"
 
-    echo "claude-shorts uninstalled."
+    echo "Clipex uninstalled."
     echo "Restart Claude Code to complete removal."
 }
 

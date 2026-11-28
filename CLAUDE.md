@@ -1,4 +1,4 @@
-# claude-shorts
+# Clipex
 
 Standalone shortform video creator. Extracts viral-ready short clips from longform videos using a model-directed workflow with Remotion-rendered premium captions.
 
@@ -35,7 +35,7 @@ node remotion/render.mjs             # Headless render (used by pipeline)
 
 ## Temp Files
 
-Pipeline stores intermediate files in `$SHORTS_TMP` (defaults to `/tmp/claude-shorts/`). Override with `export SHORTS_TMP="/path/to/dir"` for systems with limited `/tmp` space. The directory is created automatically and cleaned between runs.
+Pipeline stores intermediate files in `$SHORTS_TMP` (defaults to `/tmp/clipex/`). Override with `export SHORTS_TMP="/path/to/dir"` for systems with limited `/tmp` space. The directory is created automatically and cleaned between runs.
 
 ## Dependencies
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Setup dependencies for claude-shorts
+# Setup dependencies for Clipex
 # Usage: bash setup.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=== claude-shorts dependency setup ==="
+echo "=== Clipex dependency setup ==="
 echo ""
 
 # --- Python Virtual Environment ---
@@ -15,26 +15,6 @@ VENV=""
 if [ -d "$HOME/.video-skill" ]; then
     VENV="$HOME/.video-skill"
     echo "[Python] Found shared venv at ~/.video-skill"
-
-    # Check if faster-whisper is already installed
-    if "$VENV/bin/python3" -c "import faster_whisper" 2>/dev/null; then
-        echo "[Python] faster-whisper already installed — skipping Python setup"
-    else
-        echo "[Python] Installing faster-whisper into shared venv..."
-        "$VENV/bin/pip" install --quiet faster-whisper
-    fi
-
-    # Check mediapipe
-    if ! "$VENV/bin/python3" -c "import mediapipe" 2>/dev/null; then
-        echo "[Python] Installing mediapipe..."
-        "$VENV/bin/pip" install --quiet mediapipe
-    fi
-
-    # Check opencv
-    if ! "$VENV/bin/python3" -c "import cv2" 2>/dev/null; then
-        echo "[Python] Installing opencv-python..."
-        "$VENV/bin/pip" install --quiet opencv-python
-    fi
 else
     VENV="$HOME/.shorts-skill"
     if [ -d "$VENV" ]; then
@@ -57,10 +37,10 @@ else
         "$VENV/bin/pip" install --quiet torch torchvision torchaudio \
             --index-url https://download.pytorch.org/whl/cpu
     fi
-
-    echo "[Python] Installing faster-whisper, mediapipe, numpy, opencv-python..."
-    "$VENV/bin/pip" install --quiet faster-whisper mediapipe numpy opencv-python
 fi
+
+echo "[Python] Installing dependencies from requirements.txt..."
+"$VENV/bin/python3" -m pip install --quiet -r "$SCRIPT_DIR/requirements.txt"
 
 echo "[Python] Venv ready: $VENV"
 echo ""
@@ -71,7 +51,7 @@ echo "[Node] Setting up Remotion project..."
 
 if [ ! -f "$SCRIPT_DIR/remotion/package.json" ]; then
     echo "[Node] ERROR: remotion/package.json not found"
-    echo "       Run this script from the claude-shorts project root"
+    echo "       Run this script from the Clipex project root"
     exit 1
 fi
 

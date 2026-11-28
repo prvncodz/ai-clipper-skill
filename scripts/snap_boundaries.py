@@ -9,10 +9,10 @@ Takes proposed segment times and the transcript, then adjusts start/end to:
 
 Usage:
     python3 snap_boundaries.py \
-        --segments /tmp/claude-shorts/approved_segments.json \
-        --transcript /tmp/claude-shorts/transcript.json \
+        --segments /tmp/clipex/approved_segments.json \
+        --transcript /tmp/clipex/transcript.json \
         --input-video /path/to/source.mp4 \
-        --output /tmp/claude-shorts/snapped_segments.json
+        --output /tmp/clipex/snapped_segments.json
 
 Output: Same format as approved_segments.json with adjusted start/end times.
 """

@@ -22,7 +22,7 @@ Set SHORTS_ROOT to the directory containing this loaded SKILL.md. If the skill l
 ```bash
 # Try common locations in priority order
 SHORTS_ROOT=""
-for dir in "$PWD" "$HOME/.agents/skills/shorts" "$HOME/.claude/skills/shorts" "$HOME/.claude/skills/claude-shorts" "$HOME/claude-shorts"; do
+for dir in "$PWD" "$HOME/.agents/skills/shorts" "$HOME/.claude/skills/shorts" "$HOME/clipex"; do
     if [ -f "$dir/remotion/render.mjs" ] && [ -f "$dir/scripts/snap_boundaries.py" ]; then
         SHORTS_ROOT="$dir"
         break
@@ -36,7 +36,7 @@ fi
 Create a fresh run directory so prior clips cannot enter this export. Reuse the resolved paths for all ten steps. Use the requested output directory or default to `~/Videos/shorts`.
 
 ```bash
-SHORTS_TMP_BASE="${SHORTS_TMP:-/tmp/claude-shorts}"
+SHORTS_TMP_BASE="${SHORTS_TMP:-/tmp/clipex}"
 mkdir -p "$SHORTS_TMP_BASE"
 SHORTS_TMP=$(mktemp -d "$SHORTS_TMP_BASE/run.XXXXXXXX")
 OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Videos/shorts}"
@@ -342,7 +342,7 @@ Apply defaults automatically and honor user-specified settings.
 | Silence detection | enabled | `--no-silence` | Faster processing, word-boundary-only snapping |
 | Score threshold | 60 | (SKILL.md instruction) | Override when requested |
 | Segment duration | 15-55s | (SKILL.md instruction) | Adjust per platform (TikTok prefers 21-34s) |
-| Temp directory | `/tmp/claude-shorts/` | `SHORTS_TMP` env var | Systems with limited /tmp space |
+| Temp directory | `/tmp/clipex/` | `SHORTS_TMP` env var | Systems with limited /tmp space |
 | Export platform | `youtube,instagram` | `--platform youtube` or a comma-separated list | Select specific platforms |
 
 ## Error Recovery

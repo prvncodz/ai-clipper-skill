@@ -1,6 +1,6 @@
 # Remotion Patterns and Best Practices
 
-Key patterns used in claude-shorts, verified against Remotion v4.0.422.
+Key patterns used in Clipex, verified against Remotion v4.0.422.
 
 ## Bundle-Once-Render-Many
 

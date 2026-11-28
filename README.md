@@ -2,7 +2,7 @@
 
 ![Clipex wordmark and vertical video illustration](clipex-header.svg)
 
-Clipex is an extended fork of claude-shorts by Agrici Daniel. turns a local video into captioned vertical clips for YouTube Shorts, TikTok, and Instagram Reels. The `shorts` skill runs in Claude Code or Codex. The agent picks highlights or uses your timecodes, then runs the local transcription, rendering, and export tools.
+Clipex turns a local video into captioned vertical clips for YouTube Shorts, TikTok, and Instagram Reels. The `shorts` skill runs in Claude Code or Codex. The agent picks highlights or uses your timecodes, then runs the local transcription, rendering, and export tools. Clipex is a fork of claude-shorts by Agrici Daniel.
 
 ## Install Clipex
 
@@ -18,7 +18,7 @@ Select Claude Code or Codex when prompted. Then run `bash setup.sh` from the ins
 
 Use Bash on Linux or in [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install) on Windows. Install Python 3.10+ with `venv`, Node.js 18+ with npm, FFmpeg with `ffprobe`, `jq`, `bc`, and either Claude Code or Codex. The Claude Code installer also needs `rsync`.
 
-Setup uses `~/.video-skill` if it exists. Otherwise, it creates or reuses `~/.shorts-skill`. Setup also installs dependencies under the skill's `remotion/` directory.
+Setup uses `~/.video-skill` if it exists. Otherwise, it creates or reuses `~/.shorts-skill`. Rerun `bash setup.sh` after changing `requirements.txt`; it applies the listed versions to either Python environment. Setup also installs dependencies under the skill's `remotion/` directory.
 
 #### Codex
 
@@ -32,6 +32,8 @@ bash setup.sh
 ```
 
 If you already have the repo in that directory, run `bash setup.sh` there. Start a new Codex session and invoke `$shorts`.
+
+You can also copy an existing checkout with `bash install.sh codex`. The installer defaults to Claude Code; use `bash install.sh claude` explicitly if preferred.
 
 #### Claude Code
 
