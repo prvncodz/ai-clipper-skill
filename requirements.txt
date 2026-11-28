@@ -1,4 +1,4 @@
 faster-whisper>=1.2.1
 mediapipe>=1.2.3
-numpy>=1.24.0
+numpy>=2.5.5
 opencv-python>=5.1.0.95
