@@ -49,6 +49,14 @@ bash setup.sh
 
 Start Claude Code and invoke `/shorts`.
 
+## Samples
+
+- [Foltyn GTA](samples/foltyn-gta.mp4)
+- [IShowSpeed GTA](samples/ishowspeed-gta.mp4)
+- [Jensen Huang](samples/jensen-huang.mp4)
+- [Theo Von and Sam Altman](samples/theo-von-sam-altman.mp4)
+- [Untitled](samples/untitled.mp4)
+
 ## Make clips
 
 Pass the path to a local video in your prompt. Add a clip count, timecodes, a caption style, a destination platform, or an output directory as needed.
@@ -104,7 +112,3 @@ python3 scripts/transcribe.py "$HOME/Videos/interview.mp4" \
 ```
 
 Check names, numbers, and word timing against the source before exporting clips from the experimental backend.
-
-## Credits and license
-
-Built by Agrici Daniel and extended by Praveen Pradhan. The Numeral and Rise animations are adapted from [Subtle](https://github.com/0xpratzyy/subtle). Clipex is available under the [MIT license](LICENSE).
